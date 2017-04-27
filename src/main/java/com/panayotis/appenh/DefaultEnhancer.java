@@ -63,10 +63,6 @@ abstract class DefaultEnhancer implements Enhancer {
     }
 
     @Override
-    public void requestAttention() {
-    }
-
-    @Override
     public void registerQuit(Runnable callback) {
     }
 

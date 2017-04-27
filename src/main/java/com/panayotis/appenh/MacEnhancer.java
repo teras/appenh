@@ -128,15 +128,6 @@ public class MacEnhancer implements Enhancer {
     }
 
     @Override
-    public void requestAttention() {
-        try {
-            if (appInstance != null)
-                appClass.getMethod("requestUserAttention", boolean.class).invoke(appInstance, true);
-        } catch (Exception ex) {
-        }
-    }
-
-    @Override
     public void setSafeLookAndFeel() {
     }
 

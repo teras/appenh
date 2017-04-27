@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.panayotis.appenh.test;
 
 import com.panayotis.appenh.EnhancerManager;
@@ -25,16 +24,6 @@ public class MainTest {
             @Override
             public void run() {
                 System.out.println("Preferences clicked");
-                new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            sleep(3000);
-                        } catch (InterruptedException ex) {
-                        }
-                        EnhancerManager.getDefault().requestAttention();
-                    }
-                }.start();
             }
         });
         JFrame f = new JFrame();

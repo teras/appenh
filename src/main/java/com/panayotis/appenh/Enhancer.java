@@ -36,8 +36,6 @@ public interface Enhancer {
 
     public void registerFileOpen(FileOpenRunnable callback);
 
-    public void requestAttention();
-
     public boolean providesSystemMenus();
 
     public void setApplicationIcon(String iconResourceName);

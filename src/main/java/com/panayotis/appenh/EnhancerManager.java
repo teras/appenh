@@ -23,6 +23,8 @@ import java.awt.Image;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import javax.imageio.ImageIO;
 
 public class EnhancerManager {
@@ -43,15 +45,17 @@ public class EnhancerManager {
         return enhancer;
     }
 
-    static Image getImage(String resource) {
-        try {
-            InputStream stream = EnhancerManager.class.getClassLoader().getResourceAsStream(resource);
-            if (stream == null)
-                stream = new URL(resource).openStream();
-            if (stream != null)
-                return ImageIO.read(stream);
-        } catch (IOException ex) {
-        }
-        return null;
+    static List<Image> getImage(String... resources) {
+        List<Image> images = new ArrayList<Image>();
+        for (String name : resources)
+            try {
+                InputStream stream = EnhancerManager.class.getClassLoader().getResourceAsStream(name);
+                if (stream == null)
+                    stream = new URL(name).openStream();
+                if (stream != null)
+                    images.add(ImageIO.read(stream));
+            } catch (IOException ex) {
+            }
+        return images;
     }
 }

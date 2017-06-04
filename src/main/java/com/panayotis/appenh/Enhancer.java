@@ -20,6 +20,7 @@
 package com.panayotis.appenh;
 
 import java.io.File;
+import java.util.Collection;
 import javax.swing.JFrame;
 
 public interface Enhancer {
@@ -38,9 +39,16 @@ public interface Enhancer {
 
     public boolean providesSystemMenus();
 
-    public void setApplicationIcon(String iconResourceName);
+    public void setApplicationIcons(String... iconNames);
 
-    public void updateFrameIcon(JFrame frame);
+    /**
+     *
+     * @param frame
+     * @param iconNames Could be empty; the set application icons will be used
+     */
+    public void updateFrameIcons(JFrame frame, String... iconNames);
+
+    public void updateFrameIcons(JFrame frame, Collection<File> iconFiles);
 
     public static interface FileOpenRunnable {
 

@@ -20,13 +20,19 @@
 package com.panayotis.appenh;
 
 import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 abstract class DefaultEnhancer implements Enhancer {
 
-    private Image frameImage;
+    private List<Image> frameImages;
 
     public boolean setNimbusLookAndFeel() {
         for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
@@ -76,13 +82,27 @@ abstract class DefaultEnhancer implements Enhancer {
     }
 
     @Override
-    public void setApplicationIcon(String iconResourceName) {
-        frameImage = EnhancerManager.getImage(iconResourceName);
+    public void setApplicationIcons(String... iconNames) {
+        frameImages = EnhancerManager.getImage(iconNames);
     }
 
     @Override
-    public void updateFrameIcon(JFrame frame) {
-        if (frameImage != null)
-            frame.setIconImage(frameImage);
+    public void updateFrameIcons(JFrame frame, String... iconNames) {
+        List<Image> ficons = (iconNames == null || iconNames.length == 0)
+                ? frameImages
+                : EnhancerManager.getImage(iconNames);
+        frame.setIconImages(ficons);
+    }
+
+    public void updateFrameIcons(JFrame frame, Collection<File> iconFiles) {
+        if (iconFiles == null || iconFiles.isEmpty())
+            return;
+        List<Image> ficons = new ArrayList<Image>();
+        for (File ifile : iconFiles)
+            try {
+                ficons.add(ImageIO.read(ifile));
+            } catch (IOException ex) {
+            }
+        frame.setIconImages(ficons);
     }
 }

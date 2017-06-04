@@ -24,6 +24,7 @@ import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Collection;
 import java.util.List;
 import javax.swing.JFrame;
 
@@ -141,19 +142,22 @@ public class MacEnhancer implements Enhancer {
     }
 
     @Override
-    public void setApplicationIcon(String iconResourceName) {
-        if (appInstance != null) {
-            Image appImage = EnhancerManager.getImage(iconResourceName);
-            if (appImage != null)
+    public void setApplicationIcons(String... iconResourceName) {
+        if (appInstance != null && iconResourceName != null && iconResourceName.length > 0) {
+            List<Image> appImages = EnhancerManager.getImage(iconResourceName[iconResourceName.length - 1]);
+            if (!appImages.isEmpty())
                 try {
-                    appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, appImage);
+                    appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, appImages.get(0));
                 } catch (Exception ex) {
                 }
         }
     }
 
     @Override
-    public void updateFrameIcon(JFrame frame) {
+    public void updateFrameIcons(JFrame frame, String... iconResourceNames) {
+    }
+
+    public void updateFrameIcons(JFrame frame, Collection<File> iconFiles) {
     }
 
 }

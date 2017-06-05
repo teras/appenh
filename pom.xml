@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.panayotis</groupId>
     <artifactId>appenh</artifactId>
-    <version>0.1</version>
+    <version>0.1.1</version>
     <name>Application Enhancer</name>
-    <description>Cross-platform access of java application properties, sucj as application icon, mac os about box, theme and quit listener</description>
+    <description>Cross-platform access of java application properties, such as application icon, mac os about box, theme and quit listener</description>
     <url>https://github.com/teras/appenh</url>
 
     <licenses>
@@ -101,6 +101,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.5</maven.compiler.source>
+        <maven.compiler.target>1.5</maven.compiler.target>
     </properties>
 
 </project>

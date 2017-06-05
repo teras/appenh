@@ -28,34 +28,29 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 abstract class DefaultEnhancer implements Enhancer {
 
     private List<Image> frameImages;
 
+    @SuppressWarnings("UseSpecificCatch")
     public boolean setNimbusLookAndFeel() {
         for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
             if ("Nimbus".equals(info.getName()))
                 try {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     return true;
-                } catch (ClassNotFoundException ex) {
-                } catch (InstantiationException ex) {
-                } catch (IllegalAccessException ex) {
-                } catch (UnsupportedLookAndFeelException ex) {
+                } catch (Exception ex) {
                 }
         return false;
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     public boolean setSystemLookAndFeel() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             return true;
-        } catch (ClassNotFoundException ex1) {
-        } catch (InstantiationException ex1) {
-        } catch (IllegalAccessException ex1) {
-        } catch (UnsupportedLookAndFeelException ex1) {
+        } catch (Exception ex1) {
         }
         return false;
     }
@@ -94,6 +89,7 @@ abstract class DefaultEnhancer implements Enhancer {
         frame.setIconImages(ficons);
     }
 
+    @Override
     public void updateFrameIcons(JFrame frame, Collection<File> iconFiles) {
         if (iconFiles == null || iconFiles.isEmpty())
             return;

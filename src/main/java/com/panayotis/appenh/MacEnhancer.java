@@ -19,6 +19,7 @@
  */
 package com.panayotis.appenh;
 
+import java.awt.Desktop;
 import java.awt.Image;
 import java.io.File;
 import java.lang.reflect.InvocationHandler;
@@ -33,24 +34,35 @@ public class MacEnhancer implements Enhancer {
 
     private static final Class appClass;
     private static final Object appInstance;
+    private static final String packpref;
 
     static {
         Class aCass = null;
         Object aInst = null;
+        String ppref = null;
         try {
-            aCass = Class.forName("com.apple.eawt.Application");
-            aInst = aCass.getMethod("getApplication", (Class[]) null).invoke(null, (Object[]) null);
+            Desktop.class.getMethod("setAboutHandler", Class.forName("java.awt.desktop.AboutHandler"));
+            aCass = Desktop.class;
+            aInst = Desktop.getDesktop();
+            ppref = "java.awt.desktop.";
         } catch (Exception ex) {
+            try {
+                aCass = Class.forName("com.apple.eawt.Application");
+                aInst = aCass.getMethod("getApplication", (Class[]) null).invoke(null, (Object[]) null);
+                ppref = "com.apple.eawt.";
+            } catch (Exception ex1) {
+            }
         }
         appClass = aCass;
         appInstance = aInst;
+        packpref = ppref;
     }
 
     @Override
     public void registerAbout(final Runnable callback) {
         try {
             if (appInstance != null) {
-                Class handler = Class.forName("com.apple.eawt.AboutHandler");
+                Class handler = Class.forName(packpref + "AboutHandler");
                 appClass.getMethod("setAboutHandler", handler).invoke(appInstance, Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{handler}, new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -68,7 +80,7 @@ public class MacEnhancer implements Enhancer {
     public void registerPreferences(final Runnable callback) {
         try {
             if (appInstance != null) {
-                Class handler = Class.forName("com.apple.eawt.PreferencesHandler");
+                Class handler = Class.forName(packpref + "PreferencesHandler");
                 appClass.getMethod("setPreferencesHandler", handler).invoke(appInstance, Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{handler}, new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -86,7 +98,7 @@ public class MacEnhancer implements Enhancer {
     public void registerQuit(final Runnable callback) {
         try {
             if (appInstance != null) {
-                Class handler = Class.forName("com.apple.eawt.QuitHandler");
+                Class handler = Class.forName(packpref + "QuitHandler");
                 appClass.getMethod("setQuitHandler", handler).invoke(appInstance, Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{handler}, new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -107,7 +119,7 @@ public class MacEnhancer implements Enhancer {
     public void registerFileOpen(final FileOpenRunnable callback) {
         try {
             if (appInstance != null) {
-                Class handler = Class.forName("com.apple.eawt.OpenFilesHandler");
+                Class handler = Class.forName(packpref + "OpenFilesHandler");
                 appClass.getMethod("setOpenFileHandler", handler).invoke(appInstance, Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{handler}, new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -157,6 +169,7 @@ public class MacEnhancer implements Enhancer {
     public void updateFrameIcons(JFrame frame, String... iconResourceNames) {
     }
 
+    @Override
     public void updateFrameIcons(JFrame frame, Collection<File> iconFiles) {
     }
 

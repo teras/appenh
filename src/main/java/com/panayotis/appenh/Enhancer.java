@@ -35,6 +35,8 @@ public interface Enhancer {
 
     public void registerQuit(Runnable callback);
 
+    public void registerUpdate(Runnable callback);
+
     public void registerFileOpen(FileOpenRunnable callback);
 
     public boolean providesSystemMenus();

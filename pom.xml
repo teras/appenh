@@ -10,6 +10,48 @@
     <description>Cross-platform access of java application properties, such as application icon, mac os about box, theme and quit listener</description>
     <url>https://github.com/teras/appenh</url>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.5</maven.compiler.source>
+        <maven.compiler.target>1.5</maven.compiler.target>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>exe</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>make</executable>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.panayotis</groupId>
+            <artifactId>loadlib</artifactId>
+            <version>0.1</version>
+        </dependency>
+    </dependencies>
+
+    <scm>
+        <connection>scm:git:git://github.com/teras/appenh.git</connection>
+        <developerConnection>scm:git:ssh://github.com/teras/appenh.git</developerConnection>
+        <url>http://github.com/teras/appenh/tree/master</url>
+    </scm>
+
     <licenses>
         <license>
             <name>GNU Lesser General Public License, Version 2</name>
@@ -24,12 +66,6 @@
             <organizationUrl>http://www.panayotis.com</organizationUrl>
         </developer>
     </developers>
-
-    <scm>
-        <connection>scm:git:git://github.com/teras/appenh.git</connection>
-        <developerConnection>scm:git:ssh://github.com/teras/appenh.git</developerConnection>
-        <url>http://github.com/teras/appenh/tree/master</url>
-    </scm>
 
     <distributionManagement>
         <snapshotRepository>
@@ -98,11 +134,4 @@
             </build>
         </profile>
     </profiles>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.5</maven.compiler.source>
-        <maven.compiler.target>1.5</maven.compiler.target>
-    </properties>
-
 </project>

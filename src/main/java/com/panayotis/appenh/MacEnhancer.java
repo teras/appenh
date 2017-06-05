@@ -19,6 +19,7 @@
  */
 package com.panayotis.appenh;
 
+import com.panayotis.loadlib.LoadLib;
 import java.awt.Desktop;
 import java.awt.Image;
 import java.io.File;
@@ -28,6 +29,7 @@ import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 @SuppressWarnings("UseSpecificCatch")
 public class MacEnhancer implements Enhancer {
@@ -35,6 +37,7 @@ public class MacEnhancer implements Enhancer {
     private static final Class appClass;
     private static final Object appInstance;
     private static final String packpref;
+    private static final boolean libFound;
 
     static {
         Class aCass = null;
@@ -56,6 +59,14 @@ public class MacEnhancer implements Enhancer {
         appClass = aCass;
         appInstance = aInst;
         packpref = ppref;
+
+        boolean found = false;
+        try {
+            LoadLib.load("/lib/libmacenh.dylib");
+            found = true;
+        } catch (Throwable th) {
+        }
+        libFound = found;
     }
 
     @Override
@@ -139,6 +150,18 @@ public class MacEnhancer implements Enhancer {
         } catch (Exception ex) {
         }
     }
+
+    @Override
+    public void registerUpdate(final Runnable callback) {
+        if (libFound)
+            registerUpdate0(callback == null ? null : new Runnable() {
+                public void run() {
+                    SwingUtilities.invokeLater(callback);
+                }
+            });
+    }
+
+    private native void registerUpdate0(Runnable callback);
 
     @Override
     public void setSafeLookAndFeel() {

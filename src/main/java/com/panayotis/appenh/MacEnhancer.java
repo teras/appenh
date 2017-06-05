@@ -151,17 +151,23 @@ public class MacEnhancer implements Enhancer {
         }
     }
 
+    public void registerUpdate(Runnable callback) {
+        registerUpdate(null, null, callback);
+    }
+
     @Override
-    public void registerUpdate(final Runnable callback) {
+    public void registerUpdate(String menutext, String menushortcut, final Runnable callback) {
+        menutext = menutext == null || menutext.trim().isEmpty() ? "Check for Updates..." : menutext.trim();
+        menushortcut = menushortcut == null ? "" : menushortcut.trim();
         if (libFound)
-            registerUpdate0(callback == null ? null : new Runnable() {
+            registerUpdate0(menutext, menushortcut, callback == null ? null : new Runnable() {
                 public void run() {
                     SwingUtilities.invokeLater(callback);
                 }
             });
     }
 
-    private native void registerUpdate0(Runnable callback);
+    private native void registerUpdate0(String menutext, String menushortcut, Runnable callback);
 
     @Override
     public void setSafeLookAndFeel() {

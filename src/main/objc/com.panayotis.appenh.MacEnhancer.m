@@ -31,7 +31,7 @@ jobject callback = NULL;
 AppEnhUpdateTarget* target = nil;
 
 JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
-  (JNIEnv * genv, jobject this, jobject gcallback)
+  (JNIEnv * genv, jobject this, jstring menuname, jstring menushortcut, jobject gcallback)
 {
     if (callback)   // Alread registered object, free the old one
         (*env)->DeleteGlobalRef(env, callback);    // use env since 'env' is the environment of old 'callback'
@@ -42,6 +42,9 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
     (*env)->GetJavaVM(env, &g_VM);
     if (target!=nil)
         return; // Already registered procedure, no need to do something more since the callback has already been defined
+
+    const char * menuname_c = (*env)->GetStringUTFChars(env, menuname, 0);
+    const char * menushortcut_c = (*env)->GetStringUTFChars(env, menushortcut, 0);
 
     NSApplication* app = [NSApplication sharedApplication];
     if (!app)
@@ -58,9 +61,17 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
     NSMenu* appmenu = [appmenuitem submenu];
     if (!appmenu)
         return;
-    NSMenuItem* menuitem = [[NSMenuItem alloc] initWithTitle:@"Update" action:@selector(callback:) keyEquivalent:@""];
+    NSMenuItem* menuitem = [[NSMenuItem alloc] 
+        initWithTitle:[NSString stringWithUTF8String:menuname_c]
+        action:@selector(callback:)
+        keyEquivalent:[NSString stringWithUTF8String:menushortcut_c]];
     target = [[AppEnhUpdateTarget alloc] init];
     [menuitem setTarget:target];
     [appmenu insertItem:menuitem atIndex:1];
+
+    (*env)->ReleaseStringUTFChars(env, menuname, menuname_c);
+    (*env)->ReleaseStringUTFChars(env, menushortcut, menushortcut_c);
+
+    // might not need to deallocate menuitem and target - they live as long as the application lives
 }
 

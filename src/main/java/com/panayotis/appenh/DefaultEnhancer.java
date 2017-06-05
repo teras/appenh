@@ -76,6 +76,10 @@ abstract class DefaultEnhancer implements Enhancer {
     }
 
     @Override
+    public void registerUpdate(String menutext, String menushortcut, Runnable callback) {
+    }
+
+    @Override
     public boolean providesSystemMenus() {
         return false;
     }

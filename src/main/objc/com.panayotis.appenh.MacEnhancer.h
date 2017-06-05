@@ -9,11 +9,11 @@ extern "C" {
 #endif
 /*
  * Class:     com_panayotis_appenh_MacEnhancer
- * Method:    registerUpdate
- * Signature: (Ljava/lang/Runnable;)V
+ * Method:    registerUpdate0
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Runnable;)V
  */
 JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jstring, jstring, jobject);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
 NAME=macenh
 CLASS=com.panayotis.appenh.MacEnhancer
-JNI=/Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home/include
+JNI=${JAVA_HOME}/include
 PACKDEST=lib
 
 TARGET=target

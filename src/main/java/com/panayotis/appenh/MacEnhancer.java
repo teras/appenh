@@ -62,7 +62,7 @@ public class MacEnhancer implements Enhancer {
 
         boolean found = false;
         try {
-            LoadLib.load("/lib/libmacenh.dylib");
+            LoadLib.load("/com/panayotis/appenh/libmacenh.dylib");
             found = true;
         } catch (Throwable th) {
         }

@@ -1,7 +1,7 @@
 NAME=macenh
 CLASS=com.panayotis.appenh.MacEnhancer
 JNI=${JAVA_HOME}/include
-PACKDEST=lib
+PACKDEST=com/panayotis/appenh
 
 TARGET=target
 SOURCES_DIR=src/main/objc

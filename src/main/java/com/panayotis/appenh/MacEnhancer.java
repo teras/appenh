@@ -39,6 +39,8 @@ public class MacEnhancer implements Enhancer {
     private static final String packpref;
     private static final boolean libFound;
 
+    static final String LIB_LOCATION = "/com/panayotis/appenh/libmacenh.dylib";
+
     static {
         Class aCass = null;
         Object aInst = null;
@@ -59,14 +61,7 @@ public class MacEnhancer implements Enhancer {
         appClass = aCass;
         appInstance = aInst;
         packpref = ppref;
-
-        boolean found = false;
-        try {
-            LoadLib.load("/com/panayotis/appenh/libmacenh.dylib");
-            found = true;
-        } catch (Throwable th) {
-        }
-        libFound = found;
+        libFound = LoadLib.load(LIB_LOCATION);
     }
 
     @Override

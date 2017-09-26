@@ -2,9 +2,8 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.panayotis.appenh.test;
+package com.panayotis.appenh;
 
-import com.panayotis.appenh.EnhancerManager;
 import javax.swing.JFrame;
 
 /**

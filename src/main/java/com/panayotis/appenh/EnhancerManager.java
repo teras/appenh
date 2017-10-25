@@ -35,10 +35,8 @@ public class EnhancerManager {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("mac") && osName.contains("os") && osName.contains("x"))
             enhancer = new MacEnhancer();
-        else if (osName.contains("windows"))
-            enhancer = new WindowsEnhancer();
         else
-            enhancer = new UnixEnhancer();
+            enhancer = new DefaultEnhancer();
     }
 
     public static Enhancer getDefault() {

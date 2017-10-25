@@ -19,6 +19,7 @@
  */
 package com.panayotis.appenh;
 
+import com.seaglasslookandfeel.SeaGlassLookAndFeel;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
@@ -29,12 +30,12 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
-abstract class DefaultEnhancer implements Enhancer {
+class DefaultEnhancer implements Enhancer {
 
     private List<Image> frameImages;
 
     @SuppressWarnings("UseSpecificCatch")
-    public boolean setNimbusLookAndFeel() {
+    boolean setNimbusLookAndFeel() {
         for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
             if ("Nimbus".equals(info.getName()))
                 try {
@@ -46,9 +47,21 @@ abstract class DefaultEnhancer implements Enhancer {
     }
 
     @SuppressWarnings("UseSpecificCatch")
-    public boolean setSystemLookAndFeel() {
+    boolean setSystemLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            String name = UIManager.getSystemLookAndFeelClassName();
+            if (name.contains("MetalLookAndFeel"))
+                return false;
+            UIManager.setLookAndFeel(name);
+            return true;
+        } catch (Exception ex1) {
+        }
+        return false;
+    }
+
+    boolean setPrettyLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(new SeaGlassLookAndFeel());
             return true;
         } catch (Exception ex1) {
         }
@@ -108,5 +121,17 @@ abstract class DefaultEnhancer implements Enhancer {
             } catch (IOException ex) {
             }
         frame.setIconImages(ficons);
+    }
+
+    @Override
+    public void setSafeLookAndFeel() {
+        if (!setSystemLookAndFeel())
+            if (!setPrettyLookAndFeel())
+                setNimbusLookAndFeel();
+    }
+
+    @Override
+    public void setDefaultLookAndFeel() {
+        setSystemLookAndFeel();
     }
 }

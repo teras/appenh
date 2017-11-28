@@ -19,8 +19,8 @@
  */
 package com.panayotis.appenh;
 
-import com.seaglasslookandfeel.SeaGlassLookAndFeel;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import javax.swing.UIManager;
 
 class DefaultEnhancer implements Enhancer {
 
-    private List<Image> frameImages;
+    final List<BufferedImage> frameImages = new ArrayList<BufferedImage>();
 
     @SuppressWarnings("UseSpecificCatch")
     boolean setNimbusLookAndFeel() {
@@ -59,9 +59,10 @@ class DefaultEnhancer implements Enhancer {
         return false;
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     boolean setPrettyLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(new SeaGlassLookAndFeel());
+            UIManager.setLookAndFeel(PrettyLookAndFeelProvider.getLaF());
             return true;
         } catch (Exception ex1) {
         }
@@ -99,15 +100,21 @@ class DefaultEnhancer implements Enhancer {
 
     @Override
     public void setApplicationIcons(String... iconNames) {
-        frameImages = EnhancerManager.getImage(iconNames);
+        for (String icon : iconNames)
+            EnhancerManager.appendToList(frameImages, "resource " + icon, EnhancerManager.getImage(icon));
+    }
+
+    public void setApplicationIcons(BufferedImage... images) {
+        for (BufferedImage img : images)
+            EnhancerManager.appendToList(frameImages, "", img);
     }
 
     @Override
     public void updateFrameIcons(JFrame frame, String... iconNames) {
-        List<Image> ficons = (iconNames == null || iconNames.length == 0)
-                ? frameImages
-                : EnhancerManager.getImage(iconNames);
-        frame.setIconImages(ficons);
+        List<BufferedImage> ficons = new ArrayList<BufferedImage>();
+        for (String icon : iconNames)
+            EnhancerManager.appendToList(ficons, "resource " + icon, EnhancerManager.getImage(icon));
+        frame.setIconImages(ficons.isEmpty() ? frameImages : ficons);
     }
 
     @Override
@@ -133,5 +140,13 @@ class DefaultEnhancer implements Enhancer {
     @Override
     public void setDefaultLookAndFeel() {
         setSystemLookAndFeel();
+    }
+
+    @Override
+    public void registerApplication(String name, String comment, String... categories) {
+    }
+
+    @Override
+    public void unregisterApplication(String name) {
     }
 }

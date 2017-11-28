@@ -19,11 +19,13 @@
  */
 package com.panayotis.appenh;
 
-import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import javax.imageio.ImageIO;
 
@@ -35,6 +37,8 @@ public class EnhancerManager {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("mac") && osName.contains("os") && osName.contains("x"))
             enhancer = new MacEnhancer();
+        else if (osName.contains("linux"))
+            enhancer = new LinuxEnhancer();
         else
             enhancer = new DefaultEnhancer();
     }
@@ -43,17 +47,55 @@ public class EnhancerManager {
         return enhancer;
     }
 
-    static List<Image> getImage(String... resources) {
-        List<Image> images = new ArrayList<Image>();
-        for (String name : resources)
-            try {
-                InputStream stream = EnhancerManager.class.getClassLoader().getResourceAsStream(name);
-                if (stream == null)
-                    stream = new URL(name).openStream();
-                if (stream != null)
-                    images.add(ImageIO.read(stream));
-            } catch (IOException ex) {
-            }
-        return images;
+    static BufferedImage getImage(String resource) {
+        try {
+            InputStream stream = EnhancerManager.class.getClassLoader().getResourceAsStream(resource);
+            if (stream == null)
+                stream = new URL(resource).openStream();
+            if (stream != null)
+                return ImageIO.read(stream);
+        } catch (IOException ex) {
+        }
+        return null;
+    }
+
+    static BufferedImage getImage(Collection<BufferedImage> images, int dimension) {
+        if (images == null || images.isEmpty())
+            return null;
+        for (BufferedImage img : images)
+            if (img.getWidth() == dimension)
+                return img;
+        Iterator<BufferedImage> it = images.iterator();
+        BufferedImage candidate = it.next();
+        while (it.hasNext()) {
+            BufferedImage cur = it.next();
+            int width = cur.getWidth();
+            double delta = width / 2.0 / dimension;
+            if (delta >= 1 && delta < (candidate.getWidth() / 2.0 / dimension))
+                candidate = cur;
+            else if (delta < 1 && delta > (candidate.getWidth() / 2.0 / dimension))
+                candidate = cur;
+        }
+        if (candidate.getWidth() < dimension)
+            return candidate;
+        BufferedImage result = new BufferedImage(dimension, dimension, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = result.createGraphics();
+        g.drawImage(candidate, 0, 0, dimension, dimension, null);
+        g.dispose();
+        return result;
+    }
+
+    static String getSelfExec() {
+        String exec = System.getenv().get("APPIMAGE");
+        return exec == null ? System.getProperty("self.exec", null) : exec;
+    }
+
+    static void appendToList(List<BufferedImage> images, String name, BufferedImage img) {
+        if (img == null)
+            return;
+        if (img.getWidth() == img.getHeight())
+            images.add(img);
+        else
+            System.err.println("Width (" + img.getWidth() + ") and height (" + img.getHeight() + ") does not match; ignoring" + (name == null ? "" : " " + name) + ".");
     }
 }

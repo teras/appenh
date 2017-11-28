@@ -22,10 +22,12 @@ package com.panayotis.appenh;
 import com.panayotis.loadlib.LoadLib;
 import java.awt.Desktop;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.swing.JFrame;
@@ -178,15 +180,21 @@ public class MacEnhancer implements Enhancer {
     }
 
     @Override
-    public void setApplicationIcons(String... iconResourceName) {
-        if (appInstance != null && iconResourceName != null && iconResourceName.length > 0) {
-            List<Image> appImages = EnhancerManager.getImage(iconResourceName[iconResourceName.length - 1]);
-            if (!appImages.isEmpty())
-                try {
-                    appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, appImages.get(0));
-                } catch (Exception ex) {
-                }
-        }
+    public void setApplicationIcons(String... iconNames) {
+        if (appInstance == null)
+            return;
+        List<BufferedImage> appImages = new ArrayList<BufferedImage>();
+        for (String icon : iconNames)
+            EnhancerManager.appendToList(appImages, "resource " + icon, EnhancerManager.getImage(icon));
+        if (!appImages.isEmpty())
+            try {
+                appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, EnhancerManager.getImage(appImages, 1024));
+            } catch (Exception ex) {
+            }
+    }
+
+    @Override
+    public void setApplicationIcons(BufferedImage... iconNames) {
     }
 
     @Override
@@ -197,4 +205,11 @@ public class MacEnhancer implements Enhancer {
     public void updateFrameIcons(JFrame frame, Collection<File> iconFiles) {
     }
 
+    @Override
+    public void registerApplication(String name, String comment, String... categories) {
+    }
+
+    @Override
+    public void unregisterApplication(String name) {
+    }
 }

@@ -19,6 +19,7 @@
  */
 package com.panayotis.appenh;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
 import javax.swing.JFrame;
@@ -44,6 +45,12 @@ public interface Enhancer {
     public boolean providesSystemMenus();
 
     public void setApplicationIcons(String... iconNames);
+
+    public void setApplicationIcons(BufferedImage... iconNames);
+
+    public void registerApplication(String name, String comment, String... categories);
+
+    public void unregisterApplication(String name);
 
     /**
      *

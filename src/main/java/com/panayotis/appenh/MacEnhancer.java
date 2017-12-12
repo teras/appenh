@@ -34,7 +34,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 @SuppressWarnings("UseSpecificCatch")
-public class MacEnhancer implements Enhancer {
+class MacEnhancer implements Enhancer {
 
     private static final Class appClass;
     private static final Object appInstance;

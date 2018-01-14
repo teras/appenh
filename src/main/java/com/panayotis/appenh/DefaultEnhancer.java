@@ -64,7 +64,7 @@ class DefaultEnhancer implements Enhancer {
         try {
             UIManager.setLookAndFeel(PrettyLookAndFeelProvider.getLaF());
             return true;
-        } catch (Exception ex1) {
+        } catch (Throwable ex1) {
         }
         return false;
     }

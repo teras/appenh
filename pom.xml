@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.panayotis</groupId>
     <artifactId>appenh</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
     <name>Application Enhancer</name>
     <description>Cross-platform access of java application properties, such as application icon, mac os about box, theme and quit listener</description>
     <url>https://github.com/teras/appenh</url>
@@ -42,7 +42,7 @@
         <dependency>
             <groupId>com.panayotis</groupId>
             <artifactId>loadlib</artifactId>
-            <version>0.1.1</version>
+            <version>0.2.1</version>
         </dependency>
         <dependency>
             <groupId>com.seaglasslookandfeel</groupId>

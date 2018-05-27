@@ -59,16 +59,6 @@ class DefaultEnhancer implements Enhancer {
         return false;
     }
 
-    @SuppressWarnings("UseSpecificCatch")
-    boolean setPrettyLookAndFeel() {
-        try {
-            UIManager.setLookAndFeel(PrettyLookAndFeelProvider.getLaF());
-            return true;
-        } catch (Throwable ex1) {
-        }
-        return false;
-    }
-
     @Override
     public void registerPreferences(Runnable callback) {
     }
@@ -133,8 +123,7 @@ class DefaultEnhancer implements Enhancer {
     @Override
     public void setSafeLookAndFeel() {
         if (!setSystemLookAndFeel())
-            if (!setPrettyLookAndFeel())
-                setNimbusLookAndFeel();
+            setNimbusLookAndFeel();
     }
 
     @Override

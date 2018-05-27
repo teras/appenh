@@ -41,8 +41,28 @@ import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
+import javax.swing.UIManager;
 
 class LinuxEnhancer extends DefaultEnhancer {
+
+    @SuppressWarnings("UseSpecificCatch")
+    private boolean setNoUglySystemLookAndFeel() {
+        try {
+            String name = UIManager.getSystemLookAndFeelClassName();
+            if (name.contains("MetalLookAndFeel") || name.contains("GTKLookAndFeel"))
+                return false;
+            UIManager.setLookAndFeel(name);
+            return true;
+        } catch (Exception ex1) {
+        }
+        return false;
+    }
+
+    @Override
+    public void setSafeLookAndFeel() {
+        if (!setNoUglySystemLookAndFeel())
+            setNimbusLookAndFeel();
+    }
 
     @Override
     public void registerApplication(final String name_s, final String comment_s, final String... categories) {

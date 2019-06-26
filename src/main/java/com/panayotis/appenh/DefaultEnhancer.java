@@ -36,6 +36,8 @@ class DefaultEnhancer implements Enhancer {
 
     @SuppressWarnings("UseSpecificCatch")
     boolean setNimbusLookAndFeel() {
+        if (UIManager.getLookAndFeel().getClass().getName().toLowerCase().contains("nimbus"))
+            return true;
         for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
             if ("Nimbus".equals(info.getName()))
                 try {
@@ -50,6 +52,8 @@ class DefaultEnhancer implements Enhancer {
     boolean setSystemLookAndFeel() {
         try {
             String name = UIManager.getSystemLookAndFeelClassName();
+            if (UIManager.getLookAndFeel().getClass().getName().equals("name"))
+                return true;
             if (name.contains("MetalLookAndFeel"))
                 return false;
             UIManager.setLookAndFeel(name);

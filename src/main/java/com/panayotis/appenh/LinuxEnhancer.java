@@ -20,6 +20,7 @@
 package com.panayotis.appenh;
 
 import static com.panayotis.appenh.EnhancerManager.getSelfExec;
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -51,6 +52,8 @@ class LinuxEnhancer extends DefaultEnhancer {
             String name = UIManager.getSystemLookAndFeelClassName();
             if (name.contains("MetalLookAndFeel") || name.contains("GTKLookAndFeel"))
                 return false;
+            if (UIManager.getLookAndFeel().getClass().getName().equals(name))
+                return true;
             UIManager.setLookAndFeel(name);
             return true;
         } catch (Exception ex1) {
@@ -107,7 +110,9 @@ class LinuxEnhancer extends DefaultEnhancer {
                     out.append("Icon=").append(basename).append("\n");
                     File img32 = getTempImage(frameImages, 32);
                     File img64 = getTempImage(frameImages, 64);
-                    File img128 = new File(System.getProperty("user.home"), ".cache/appenh/" + basename + ".png");
+                    File parent = new File(System.getProperty("user.home"), ".cache/appenh");
+                    parent.mkdirs();
+                    File img128 = new File(parent, basename + ".png");
                     try {
                         img128.getParentFile().mkdirs();
                         ImageIO.write(EnhancerManager.getImage(frameImages, 128), "png", new FileOutputStream(img128));

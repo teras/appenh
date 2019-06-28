@@ -186,6 +186,7 @@ class LinuxEnhancer extends DefaultEnhancer {
             addMetaData(metadata, "Thumb::MTime", String.valueOf(exec.lastModified() / 1000));
 
             //writing the data
+            output.getParentFile().mkdirs();
             BufferedOutputStream baos = new BufferedOutputStream(new FileOutputStream(output));
             ImageOutputStream stream = ImageIO.createImageOutputStream(baos);
             writer.setOutput(stream);

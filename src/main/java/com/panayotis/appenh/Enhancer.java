@@ -26,43 +26,43 @@ import javax.swing.JFrame;
 
 public interface Enhancer {
 
-    public void setSafeLookAndFeel();
+    void setSafeLookAndFeel();
 
-    public void setDefaultLookAndFeel();
+    void setDefaultLookAndFeel();
 
-    public void registerPreferences(Runnable callback);
+    void registerPreferences(Runnable callback);
 
-    public void registerAbout(Runnable callback);
+    void registerAbout(Runnable callback);
 
-    public void registerQuit(Runnable callback);
+    void registerQuit(Runnable callback);
 
-    public void registerUpdate(String menutext, String menushortcut, Runnable callback);
+    void registerUpdate(String menutext, String menushortcut, Runnable callback);
 
-    public void registerUpdate(Runnable callback);
+    void registerUpdate(Runnable callback);
 
-    public void registerFileOpen(FileOpenRunnable callback);
+    void registerFileOpen(FileOpenRunnable callback);
 
-    public boolean providesSystemMenus();
+    boolean providesSystemMenus();
 
-    public void setApplicationIcons(String... iconNames);
+    void setApplicationIcons(String... iconNames);
 
-    public void setApplicationIcons(BufferedImage... iconNames);
+    void setApplicationIcons(BufferedImage... iconNames);
 
-    public void registerApplication(String name, String comment, String... categories);
+    void registerApplication(String name, String comment, String... categories);
 
-    public void unregisterApplication(String name);
+    void unregisterApplication(String name);
 
     /**
      *
      * @param frame
      * @param iconNames Could be empty; the set application icons will be used
      */
-    public void updateFrameIcons(JFrame frame, String... iconNames);
+    void updateFrameIcons(JFrame frame, String... iconNames);
 
-    public void updateFrameIcons(JFrame frame, Collection<File> iconFiles);
+    void updateFrameIcons(JFrame frame, Collection<File> iconFiles);
 
-    public static interface FileOpenRunnable {
+    interface FileOpenRunnable {
 
-        public void openFile(File file);
+        void openFile(File file);
     }
 }

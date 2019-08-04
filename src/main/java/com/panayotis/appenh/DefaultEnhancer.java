@@ -125,6 +125,11 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
+    public void updateFrameIconsWithImages(JFrame frame, Collection<Image> iconFiles) {
+        frame.setIconImages(new ArrayList<Image>(iconFiles));
+    }
+
+    @Override
     public void setSafeLookAndFeel() {
         if (!setSystemLookAndFeel())
             setNimbusLookAndFeel();

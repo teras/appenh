@@ -19,6 +19,7 @@
  */
 package com.panayotis.appenh;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
@@ -53,13 +54,14 @@ public interface Enhancer {
     void unregisterApplication(String name);
 
     /**
-     *
      * @param frame
      * @param iconNames Could be empty; the set application icons will be used
      */
     void updateFrameIcons(JFrame frame, String... iconNames);
 
     void updateFrameIcons(JFrame frame, Collection<File> iconFiles);
+
+    void updateFrameIconsWithImages(JFrame frame, Collection<Image> iconFiles);
 
     interface FileOpenRunnable {
 

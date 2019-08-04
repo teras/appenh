@@ -206,6 +206,10 @@ class MacEnhancer implements Enhancer {
     }
 
     @Override
+    public void updateFrameIconsWithImages(JFrame frame, Collection<Image> iconFiles) {
+    }
+
+    @Override
     public void registerApplication(String name, String comment, String... categories) {
     }
 

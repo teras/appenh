@@ -63,6 +63,8 @@ public interface Enhancer {
 
     void updateFrameIconsWithImages(JFrame frame, Collection<Image> iconFiles);
 
+    void setFrameSaveState(JFrame frame, boolean notSaved);
+
     interface FileOpenRunnable {
 
         void openFile(File file);

@@ -20,6 +20,7 @@
 package com.panayotis.appenh;
 
 import com.panayotis.loadlib.LoadLib;
+
 import java.awt.Desktop;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -207,6 +208,11 @@ class MacEnhancer implements Enhancer {
 
     @Override
     public void updateFrameIconsWithImages(JFrame frame, Collection<Image> iconFiles) {
+    }
+
+    @Override
+    public void setFrameSaveState(JFrame frame, boolean notSaved) {
+        frame.getRootPane().putClientProperty("Window.documentModified", notSaved ? Boolean.TRUE : Boolean.FALSE);
     }
 
     @Override

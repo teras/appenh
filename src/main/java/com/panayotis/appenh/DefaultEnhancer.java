@@ -130,6 +130,11 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
+    public void setFrameSaveState(JFrame frame, boolean notSaved) {
+        // not supported
+    }
+
+    @Override
     public void setSafeLookAndFeel() {
         if (!setSystemLookAndFeel())
             setNimbusLookAndFeel();

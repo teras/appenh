@@ -39,6 +39,8 @@ public interface Enhancer {
 
     void registerUpdate(String menutext, String menushortcut, Runnable callback);
 
+    void registerMenu(String menutext, Runnable callback);
+
     void registerUpdate(Runnable callback);
 
     void registerFileOpen(FileOpenRunnable callback);

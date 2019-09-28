@@ -88,6 +88,10 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
+    public void registerMenu(String menutext, Runnable callback) {
+    }
+
+    @Override
     public boolean providesSystemMenus() {
         return false;
     }

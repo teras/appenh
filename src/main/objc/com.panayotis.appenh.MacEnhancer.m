@@ -2,46 +2,51 @@
 #include <Foundation/NSObjCRuntime.h>
 #include <AppKit/AppKit.h>
 
-JavaVM* g_VM;
-JNIEnv* env = NULL;
-jobject callback = NULL;
+JavaVM* jvm = NULL;
 
-@interface AppEnhUpdateTarget : NSObject
+@interface AppEnhUpdateTarget : NSObject {
+@private
+    jobject callback;
+    JNIEnv* env;
+}
+
+- (instancetype) initWithCallback:(jobject) callback env:(JNIEnv*) env;
 - (void) callback:(id)sender;
 @end
 
 @implementation AppEnhUpdateTarget : NSObject
+
+- (instancetype) initWithCallback:(jobject) callbackJ env:(JNIEnv*) envJ
+{
+    self = [super init];
+    if (self) {
+        self->callback = callbackJ;
+        self->env = envJ;
+    }
+    return self;
+}
+
 - (void) callback:(id)sender
 {
-    if (callback==NULL)
-        return;
-    if ((*g_VM)->AttachCurrentThread(g_VM, (void**)&env, NULL) != 0)
+    if ((*jvm)->AttachCurrentThread(jvm, (void**)&self->env, NULL) != 0)
         return;
 
-    jclass cls = (*env)->GetObjectClass(env, callback);
-    jmethodID mid = (*env)->GetMethodID(env, cls, "run", "()V");
+    jclass cls = (*self->env)->GetObjectClass(self->env, self->callback);
+    jmethodID mid = (*self->env)->GetMethodID(self->env, cls, "run", "()V");
     if (mid == 0)
         return;
-    (*env)->CallVoidMethod(env, callback, mid);
+    (*self->env)->CallVoidMethod(self->env, self->callback, mid);
 
-//    (*g_VM)->DetachCurrentThread(g_VM);
+//    (*jvm)->DetachCurrentThread(jvm);
 }
 @end
 
-AppEnhUpdateTarget* target = nil;
-
 JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
-  (JNIEnv * genv, jobject this, jstring menuname, jstring menushortcut, jobject gcallback)
+  (JNIEnv * env, jobject this, jstring menuname, jstring menushortcut, jobject callback)
 {
-    if (callback)   // Alread registered object, free the old one
-        (*env)->DeleteGlobalRef(env, callback);    // use env since 'env' is the environment of old 'callback'
-    callback = (*genv)->IsSameObject(genv, gcallback, NULL)  // use genv to test the new object since this is the environment of 'gcallback'
-        ? NULL
-        : (*genv)->NewGlobalRef(genv, gcallback);  // create reference to callback if not null with genv as environment
-    env = genv;
-    (*env)->GetJavaVM(env, &g_VM);
-    if (target!=nil)
-        return; // Already registered procedure, no need to do something more since the callback has already been defined
+    if (jvm==NULL)
+        (*env)->GetJavaVM(env, &jvm);
+    AppEnhUpdateTarget* target = [[AppEnhUpdateTarget alloc] initWithCallback:(*env)->NewGlobalRef(env, callback) env:env];
 
     const char * menuname_c = (*env)->GetStringUTFChars(env, menuname, 0);
     const char * menushortcut_c = (*env)->GetStringUTFChars(env, menushortcut, 0);
@@ -65,7 +70,6 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
         initWithTitle:[NSString stringWithUTF8String:menuname_c]
         action:@selector(callback:)
         keyEquivalent:[NSString stringWithUTF8String:menushortcut_c]];
-    target = [[AppEnhUpdateTarget alloc] init];
     [menuitem setTarget:target];
     [appmenu insertItem:menuitem atIndex:1];
 

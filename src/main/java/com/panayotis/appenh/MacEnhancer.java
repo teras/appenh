@@ -149,6 +149,14 @@ class MacEnhancer implements Enhancer {
         }
     }
 
+    @Override
+    public void registerMenu(String menutext, Runnable callback) {
+        if (menutext == null || menutext.trim().isEmpty())
+            return;
+        registerUpdate(menutext, null, callback);
+    }
+
+    @Override
     public void registerUpdate(Runnable callback) {
         registerUpdate(null, null, callback);
     }

@@ -15,6 +15,23 @@ extern "C" {
 JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
   (JNIEnv *, jobject, jstring, jstring, jobject);
 
+/*
+ * Class:     com_panayotis_appenh_MacEnhancer
+ * Method:    showOpenDialog
+ * Signature: (Ljava/lang/String;Ljava/lang/String;ZZLcom/panayotis/appenh/MacEnhancer/FileDialogCallback;)V
+ */
+JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showOpenDialog
+  (JNIEnv *, jobject, jstring, jstring, jstring, jboolean, jboolean, jboolean, jobject);
+
+/*
+ * Class:     com_panayotis_appenh_MacEnhancer
+ * Method:    showSaveDialog
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/panayotis/appenh/MacEnhancer/FileDialogCallback;)V
+ */
+JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showSaveDialog
+  (JNIEnv *, jobject, jstring, jstring, jstring, jstring, jobject);
+
+
 #ifdef __cplusplus
 }
 #endif

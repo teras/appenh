@@ -24,11 +24,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import javax.swing.UIManager;
+import javax.swing.*;
 
 class DefaultEnhancer implements Enhancer {
 

@@ -19,6 +19,7 @@
  */
 package com.panayotis.appenh;
 
+import com.panayotis.appenh.AFileChooser.FileSelectionMode;
 import com.panayotis.loadlib.LoadLib;
 
 import java.awt.Desktop;
@@ -31,11 +32,14 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import static com.panayotis.appenh.AFileChooser.FileSelectionMode.*;
+
 @SuppressWarnings("UseSpecificCatch")
-class MacEnhancer implements Enhancer {
+class MacEnhancer implements Enhancer, FileChooserFactory {
 
     private static final Class appClass;
     private static final Object appInstance;
@@ -229,5 +233,68 @@ class MacEnhancer implements Enhancer {
 
     @Override
     public void unregisterApplication(String name) {
+    }
+
+    @Override
+    public Collection<File> showOpenDialog(final String title, final String buttonTitle, final File directory, final boolean openMulti, FileSelectionMode mode) {
+        final FileSelectionMode cmode = mode == null ? FilesOnly : mode;
+        return showDialogCommon(new OpenDialogLambda() {
+            @Override
+            public void exec(FileDialogCallback callback) {
+                showOpenDialog(title, buttonTitle, directory == null ? null : directory.getAbsolutePath(),
+                        cmode == FilesOnly || cmode == FilesAndDirectories,
+                        cmode == DirectoriesOnly || cmode == FilesAndDirectories,
+                        openMulti, callback);
+            }
+        });
+    }
+
+    @Override
+    public File showSaveDialog(final String title, final String buttonTitle, final File directory, final String file) {
+        List<File> files = showDialogCommon(new OpenDialogLambda() {
+            @Override
+            public void exec(FileDialogCallback callback) {
+                showSaveDialog(title, buttonTitle, directory == null ? null : directory.getAbsolutePath(), file, callback);
+            }
+        });
+        return files.isEmpty() ? null : files.get(0);
+    }
+
+    private List<File> showDialogCommon(OpenDialogLambda exec) {
+        final Thread thread = Thread.currentThread();
+        final AtomicBoolean finish = new AtomicBoolean(false);
+        final List<File> result = new ArrayList<File>();
+        exec.exec(new FileDialogCallback() {
+            @Override
+            public void fileSelected(String path) {
+                if (path == null) {
+                    finish.set(true);
+                    thread.interrupt();
+                } else {
+                    result.add(new File(path));
+                }
+            }
+        });
+        while (true) {
+            try {
+                if (finish.get())
+                    break;
+                Thread.sleep(Integer.MAX_VALUE);
+            } catch (InterruptedException ignored) {
+            }
+        }
+        return result;
+    }
+
+    private native void showOpenDialog(String title, String buttonTitle, String path, boolean canChooseFiles, boolean canChooseDirectories, boolean openMulti, FileDialogCallback callback);
+
+    private native void showSaveDialog(String title, String buttonTitle, String directory, String file, FileDialogCallback callback);
+
+    private interface FileDialogCallback {
+        void fileSelected(String path);
+    }
+
+    private interface OpenDialogLambda {
+        void exec(FileDialogCallback callback);
     }
 }

@@ -1,6 +1,7 @@
 #include "com.panayotis.appenh.MacEnhancer.h"
 #include <Foundation/NSObjCRuntime.h>
 #include <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 
 JavaVM* jvm = NULL;
 
@@ -79,3 +80,90 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
     // might not need to deallocate menuitem and target - they live as long as the application lives
 }
 
+
+/*
+ * Class:     com_panayotis_appenh_MacEnhancer
+ * Method:    showOpenDialog
+ * Signature: (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
+ */
+JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showOpenDialog
+  (JNIEnv * env, jobject this, jstring title, jstring button, jstring directory, jboolean canChooseFiles, jboolean canChooseDirectories, jboolean openMulti, jobject callback)
+{
+    const char * title_c = title == NULL ? NULL : (*env)->GetStringUTFChars(env, title, 0);
+    const char * button_c = button == NULL ? NULL : (*env)->GetStringUTFChars(env, button, 0);
+    const char * directory_c = directory == NULL ? NULL : (*env)->GetStringUTFChars(env, directory, 0);
+    jobject callbackG = (*env)->NewGlobalRef(env, callback);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSOpenPanel* open = [NSOpenPanel openPanel];
+        if (title_c)
+            [open setTitle:[NSString stringWithUTF8String:title_c]];
+        if (button_c)
+            [open setPrompt:[NSString stringWithUTF8String:button_c]];
+        if (directory_c)
+            [open setDirectoryURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:directory_c]]];
+        [open setCanChooseFiles:canChooseFiles];
+        [open setCanChooseDirectories:canChooseDirectories];
+        [open setAllowsMultipleSelection:openMulti];
+        [open beginWithCompletionHandler:^(NSInteger asyncResult){
+            jmethodID mid = (*env)->GetMethodID(env, (*env)->GetObjectClass(env, callbackG),
+                "fileSelected", "(Ljava/lang/String;)V");
+            if (mid == 0)
+                return;
+            if (asyncResult == NSModalResponseOK) {
+                for (NSURL* url  in [open URLs]) {
+                    jstring result = (*env)->NewStringUTF(env, [[url path] UTF8String]);
+                    (*env)->CallVoidMethod(env, callbackG, mid, result);
+                    (*env)->DeleteLocalRef(env, result);
+                }
+            }
+            (*env)->CallVoidMethod(env, callbackG, mid, NULL);
+            (*env)->DeleteGlobalRef(env, callbackG);
+        }];
+        (*env)->ReleaseStringUTFChars(env, title, title_c);
+        (*env)->ReleaseStringUTFChars(env, directory, directory_c);
+    });
+}
+
+/*
+ * Class:     com_panayotis_appenh_MacEnhancer
+ * Method:    showSaveDialog
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showSaveDialog
+  (JNIEnv * env, jobject this, jstring title, jstring button, jstring directory, jstring filename, jobject callback)
+{
+    const char * title_c = title == NULL ? NULL : (*env)->GetStringUTFChars(env, title, 0);
+    const char * button_c = button == NULL ? NULL : (*env)->GetStringUTFChars(env, button, 0);
+    const char * directory_c = directory == NULL ? NULL : (*env)->GetStringUTFChars(env, directory, 0);
+    const char * filename_c = filename == NULL ? NULL : (*env)->GetStringUTFChars(env, filename, 0);
+    jobject callbackG = (*env)->NewGlobalRef(env, callback);
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSSavePanel* save = [NSSavePanel savePanel];
+        if (title_c)
+            [save setTitle:[NSString stringWithUTF8String:title_c]];
+        if (button_c)
+            [save setPrompt:[NSString stringWithUTF8String:button_c]];
+        if (directory_c)
+            [save setDirectoryURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:directory_c]]];
+        if (filename_c)
+            [save setNameFieldStringValue:[NSString stringWithUTF8String:filename_c]];
+        [save beginWithCompletionHandler:^(NSInteger asyncResult){
+            jmethodID mid = (*env)->GetMethodID(env, (*env)->GetObjectClass(env, callbackG),
+                "fileSelected", "(Ljava/lang/String;)V");
+            if (mid == 0)
+                return;
+            if (asyncResult == NSModalResponseOK) {
+                jstring result = (*env)->NewStringUTF(env, [[[save URL] path] UTF8String]);
+                (*env)->CallVoidMethod(env, callbackG, mid, result);
+                (*env)->DeleteLocalRef(env, result);
+            }
+            (*env)->CallVoidMethod(env, callbackG, mid, NULL);
+            (*env)->DeleteGlobalRef(env, callbackG);
+        }];
+        (*env)->ReleaseStringUTFChars(env, title, title_c);
+        (*env)->ReleaseStringUTFChars(env, button, button_c);
+        (*env)->ReleaseStringUTFChars(env, directory, directory_c);
+        (*env)->ReleaseStringUTFChars(env, filename, filename_c);
+    });
+}

@@ -22,8 +22,8 @@ package com.panayotis.appenh;
 import com.panayotis.appenh.AFileChooser.FileSelectionMode;
 import com.panayotis.loadlib.LoadLib;
 
-import java.awt.Desktop;
-import java.awt.Image;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.InvocationHandler;
@@ -33,15 +33,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 
 import static com.panayotis.appenh.AFileChooser.FileSelectionMode.*;
 
 @SuppressWarnings("UseSpecificCatch")
 class MacEnhancer implements Enhancer, FileChooserFactory {
 
-    private static final Class appClass;
+    private static final Class<?> appClass;
     private static final Object appInstance;
     private static final String packpref;
     private static final boolean libFound;
@@ -49,10 +47,11 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     static final String LIB_LOCATION = "/com/panayotis/appenh/libmacenh.dylib";
 
     static {
-        Class aCass = null;
+        Class<?> aCass = null;
         Object aInst = null;
         String ppref = null;
         try {
+            //noinspection JavaReflectionMemberAccess
             Desktop.class.getMethod("setAboutHandler", Class.forName("java.awt.desktop.AboutHandler"));
             aCass = Desktop.class;
             aInst = Desktop.getDesktop();
@@ -60,9 +59,9 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
         } catch (Exception ex) {
             try {
                 aCass = Class.forName("com.apple.eawt.Application");
-                aInst = aCass.getMethod("getApplication", (Class[]) null).invoke(null, (Object[]) null);
+                aInst = aCass.getMethod("getApplication").invoke(null);
                 ppref = "com.apple.eawt.";
-            } catch (Exception ex1) {
+            } catch (Exception ignored) {
             }
         }
         appClass = aCass;
@@ -75,17 +74,17 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     public void registerAbout(final Runnable callback) {
         try {
             if (appInstance != null) {
-                Class handler = Class.forName(packpref + "AboutHandler");
+                Class<?> handler = Class.forName(packpref + "AboutHandler");
                 appClass.getMethod("setAboutHandler", handler).invoke(appInstance, Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{handler}, new InvocationHandler() {
                     @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    public Object invoke(Object proxy, Method method, Object[] args) {
                         if (method.getName().equals("handleAbout"))
                             callback.run();
                         return null;
                     }
                 }));
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -96,14 +95,14 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
                 Class handler = Class.forName(packpref + "PreferencesHandler");
                 appClass.getMethod("setPreferencesHandler", handler).invoke(appInstance, Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{handler}, new InvocationHandler() {
                     @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    public Object invoke(Object proxy, Method method, Object[] args) {
                         if (method.getName().equals("handlePreferences"))
                             callback.run();
                         return null;
                     }
                 }));
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -118,13 +117,13 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
                         if (method.getName().equals("handleQuitRequestWith")) {
                             callback.run();
                             if (args != null && args.length > 1)
-                                args[1].getClass().getMethod("cancelQuit", (Class[]) null).invoke(args[1], (Object[]) null);
+                                args[1].getClass().getMethod("cancelQuit", (Class<?>[]) null).invoke(args[1]);
                         }
                         return null;
                     }
                 }));
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -132,13 +131,13 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     public void registerFileOpen(final FileOpenRunnable callback) {
         try {
             if (appInstance != null) {
-                Class handler = Class.forName(packpref + "OpenFilesHandler");
+                Class<?> handler = Class.forName(packpref + "OpenFilesHandler");
                 appClass.getMethod("setOpenFileHandler", handler).invoke(appInstance, Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{handler}, new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                         if (method.getName().equals("openFiles") && args != null && args.length > 0) {
-                            Method m = args[0].getClass().getMethod("getFiles", (Class[]) null);
-                            List<File> list = (List<File>) m.invoke(args[0], (Object[]) null);
+                            Method m = args[0].getClass().getMethod("getFiles");
+                            List<File> list = (List<File>) m.invoke(args[0]);
                             for (File f : list)
                                 try {
                                     callback.openFile(f);
@@ -149,7 +148,7 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
                     }
                 }));
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -202,7 +201,7 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
         if (!appImages.isEmpty())
             try {
                 appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, EnhancerManager.getImage(appImages, 1024));
-            } catch (Exception ex) {
+            } catch (Exception ignored) {
             }
     }
 
@@ -290,6 +289,7 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
 
     private native void showSaveDialog(String title, String buttonTitle, String directory, String file, FileDialogCallback callback);
 
+    @SuppressWarnings("unused")
     private interface FileDialogCallback {
         void fileSelected(String path);
     }

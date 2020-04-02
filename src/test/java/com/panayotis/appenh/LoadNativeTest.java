@@ -17,7 +17,9 @@ public class LoadNativeTest {
 
     @Test
     public void testLoad() {
-        if (EnhancerManager.getDefault() instanceof MacEnhancer)
+        if (EnhancerManager.getDefault() instanceof MacEnhancer) {
             assertTrue("Unable to load native library", LoadLib.load(MacEnhancer.LIB_LOCATION));
+            System.out.println(            EnhancerManager.getDefault().getThemeName());
+        }
     }
 }

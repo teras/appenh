@@ -176,7 +176,28 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
             });
     }
 
+    @Override
+    public native String getThemeName();
+
     private native void registerUpdate0(String menutext, String menushortcut, Runnable callback);
+
+    @Override
+    public void registerThemeChanged(final ThemeChangeListener callback) {
+        if (libFound)
+            registerThemeChanged0(new ThemeChangeListener() {
+                @Override
+                public void themeChanged(final String themeName) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.themeChanged(themeName);
+                        }
+                    });
+                }
+            });
+    }
+
+    private native void registerThemeChanged0(ThemeChangeListener callback);
 
     @Override
     public void setSafeLookAndFeel() {

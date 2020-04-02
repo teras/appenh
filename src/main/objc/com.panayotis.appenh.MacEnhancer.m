@@ -5,20 +5,35 @@
 
 JavaVM* jvm = NULL;
 
-@interface AppEnhUpdateTarget : NSObject {
-@private
+@interface AppEnhTarget : NSObject {
+@protected
     jobject callback;
     JNIEnv* env;
 }
-
 - (instancetype) initWithCallback:(jobject) callback env:(JNIEnv*) env;
+@end
+
+@interface AppEnhUpdateTarget : AppEnhTarget
 - (void) callback:(id)sender;
 @end
 
-@implementation AppEnhUpdateTarget : NSObject
+@interface AppEnhThemeChangeTarget : AppEnhTarget
+- (void)themeChanged:(NSNotification *) notification;
+@end
 
-- (instancetype) initWithCallback:(jobject) callbackJ env:(JNIEnv*) envJ
-{
+/*
+ * Generic helper functions
+ */
+jstring getThemeName(JNIEnv * jenv) {
+    NSString* nsname = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
+    if (nsname==nil)
+        nsname = @"Light";
+    const char* name = [nsname UTF8String];
+    return (*jenv)->NewStringUTF(jenv, name);
+}
+
+@implementation AppEnhTarget
+- (instancetype) initWithCallback:(jobject) callbackJ env:(JNIEnv*) envJ {
     self = [super init];
     if (self) {
         self->callback = callbackJ;
@@ -26,25 +41,36 @@ JavaVM* jvm = NULL;
     }
     return self;
 }
+@end
 
-- (void) callback:(id)sender
-{
+@implementation AppEnhUpdateTarget
+- (void) callback:(id)sender {
     if ((*jvm)->AttachCurrentThread(jvm, (void**)&self->env, NULL) != 0)
         return;
-
-    jclass cls = (*self->env)->GetObjectClass(self->env, self->callback);
+    jclass cls = (*env)->FindClass(env, "java/lang/Runnable");
     jmethodID mid = (*self->env)->GetMethodID(self->env, cls, "run", "()V");
     if (mid == 0)
         return;
     (*self->env)->CallVoidMethod(self->env, self->callback, mid);
-
 //    (*jvm)->DetachCurrentThread(jvm);
 }
 @end
 
+@implementation AppEnhThemeChangeTarget
+- (void)themeChanged:(NSNotification *) notification {
+    if ((*jvm)->AttachCurrentThread(jvm, (void**)&self->env, NULL) != 0)
+        return;
+    jclass cls = (*env)->FindClass(env, "com/panayotis/appenh/Enhancer$ThemeChangeListener");
+    jmethodID mid = (*self->env)->GetMethodID(self->env, cls, "themeChanged", "(Ljava/lang/String;)V");
+    if (mid == 0)
+        return;
+    (*self->env)->CallVoidMethod(self->env, self->callback, mid, getThemeName(self->env));
+//    (*g_VM)->DetachCurrentThread(g_VM);
+}
+@end
+
 JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
-  (JNIEnv * env, jobject this, jstring menuname, jstring menushortcut, jobject callback)
-{
+  (JNIEnv * env, jobject this, jstring menuname, jstring menushortcut, jobject callback) {
     if (jvm==NULL)
         (*env)->GetJavaVM(env, &jvm);
     AppEnhUpdateTarget* target = [[AppEnhUpdateTarget alloc] initWithCallback:(*env)->NewGlobalRef(env, callback) env:env];
@@ -80,6 +106,18 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
     // might not need to deallocate menuitem and target - they live as long as the application lives
 }
 
+JNIEXPORT jstring JNICALL Java_com_panayotis_appenh_MacEnhancer_getThemeName
+  (JNIEnv * env, jobject this) {
+    return getThemeName(env);
+}
+
+JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerThemeChanged0
+  (JNIEnv * env, jobject this, jobject callback) {
+   if (jvm==NULL)
+          (*env)->GetJavaVM(env, &jvm);
+    AppEnhThemeChangeTarget* target = [[AppEnhThemeChangeTarget alloc] initWithCallback:(*env)->NewGlobalRef(env, callback) env:env];
+    [NSDistributedNotificationCenter.defaultCenter addObserver:target selector:@selector(themeChanged:) name:@"AppleInterfaceThemeChangedNotification" object: nil];
+}
 
 /*
  * Class:     com_panayotis_appenh_MacEnhancer
@@ -87,8 +125,8 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerUpdate0
  * Signature: (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
  */
 JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showOpenDialog
-  (JNIEnv * env, jobject this, jstring title, jstring button, jstring directory, jboolean canChooseFiles, jboolean canChooseDirectories, jboolean openMulti, jobject callback)
-{
+  (JNIEnv * env, jobject this, jstring title, jstring button, jstring directory, jboolean canChooseFiles,
+        jboolean canChooseDirectories, jboolean openMulti, jobject callback){
     const char * title_c = title == NULL ? NULL : (*env)->GetStringUTFChars(env, title, 0);
     const char * button_c = button == NULL ? NULL : (*env)->GetStringUTFChars(env, button, 0);
     const char * directory_c = directory == NULL ? NULL : (*env)->GetStringUTFChars(env, directory, 0);
@@ -130,8 +168,8 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showOpenDialog
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showSaveDialog
-  (JNIEnv * env, jobject this, jstring title, jstring button, jstring directory, jstring filename, jobject callback)
-{
+  (JNIEnv * env, jobject this, jstring title, jstring button, jstring directory, jstring filename,
+        jobject callback) {
     const char * title_c = title == NULL ? NULL : (*env)->GetStringUTFChars(env, title, 0);
     const char * button_c = button == NULL ? NULL : (*env)->GetStringUTFChars(env, button, 0);
     const char * directory_c = directory == NULL ? NULL : (*env)->GetStringUTFChars(env, directory, 0);

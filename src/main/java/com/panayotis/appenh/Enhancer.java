@@ -67,8 +67,16 @@ public interface Enhancer {
 
     void setFrameSaveState(JFrame frame, boolean notSaved);
 
+    void registerThemeChanged(ThemeChangeListener callback);
+
+    String getThemeName();
+
     interface FileOpenRunnable {
 
         void openFile(File file);
+    }
+
+    interface ThemeChangeListener {
+        void themeChanged(String themeName);
     }
 }

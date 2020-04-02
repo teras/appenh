@@ -32,6 +32,22 @@ JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_showSaveDialog
   (JNIEnv *, jobject, jstring, jstring, jstring, jstring, jobject);
 
 
+/*
+ * Class:     com_panayotis_appenh_MacEnhancer
+ * Method:    getThemeName
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_panayotis_appenh_MacEnhancer_getThemeName
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_panayotis_appenh_MacEnhancer
+ * Method:    registerThemeChanged0
+ * Signature: (Lcom/panayotis/appenh/Enhancer/ThemeChangeListener;)V
+ */
+JNIEXPORT void JNICALL Java_com_panayotis_appenh_MacEnhancer_registerThemeChanged0
+  (JNIEnv *, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif

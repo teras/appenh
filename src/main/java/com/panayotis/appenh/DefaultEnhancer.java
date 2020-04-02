@@ -156,4 +156,13 @@ class DefaultEnhancer implements Enhancer {
     @Override
     public void unregisterApplication(String name) {
     }
+
+    @Override
+    public void registerThemeChanged(ThemeChangeListener callback) {
+    }
+
+    @Override
+    public String getThemeName() {
+        return "";
+    }
 }

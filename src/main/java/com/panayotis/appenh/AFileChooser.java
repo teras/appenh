@@ -109,16 +109,12 @@ public class AFileChooser {
         @Override
         public Collection<File> showOpenDialog(String title, String buttonTitle, File directory, boolean openMulti, FileSelectionMode mode) {
             JFileChooser fc = new JFileChooser(directory);
-            switch (mode) {
-                case FilesAndDirectories:
-                    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                    break;
-                case DirectoriesOnly:
-                    fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    break;
-                default:
-                    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            }
+            if (mode == FileSelectionMode.FilesAndDirectories)
+                fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            else if (mode == FileSelectionMode.DirectoriesOnly)
+                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            else
+                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fc.setApproveButtonText(buttonTitle);
             fc.setDialogTitle(title);
             fc.setMultiSelectionEnabled(openMulti);

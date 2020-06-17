@@ -197,6 +197,22 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
             });
     }
 
+    @Override
+    public void toggleFullScreen(Window window) {
+        try {
+            if (window instanceof RootPaneContainer) {
+                ((RootPaneContainer) window).getRootPane().putClientProperty("apple.awt.fullscreenable", Boolean.TRUE);
+                if (appInstance != null)
+                    appInstance.getClass().getMethod("requestToggleFullScreen", Window.class).invoke(appInstance, window);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+        // failsafe
+        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        device.setFullScreenWindow(device.getFullScreenWindow() == window ? null : window);
+    }
+
     private native void registerThemeChanged0(ThemeChangeListener callback);
 
     @Override

@@ -56,7 +56,7 @@ public interface Enhancer {
     void unregisterApplication(String name);
 
     /**
-     * @param frame
+     * @param frame The frame to work on
      * @param iconNames Could be empty; the set application icons will be used
      */
     void updateFrameIcons(JFrame frame, String... iconNames);
@@ -68,6 +68,8 @@ public interface Enhancer {
     void setFrameSaveState(JFrame frame, boolean notSaved);
 
     void registerThemeChanged(ThemeChangeListener callback);
+
+    void toggleFullScreen(Window window);
 
     String getThemeName();
 

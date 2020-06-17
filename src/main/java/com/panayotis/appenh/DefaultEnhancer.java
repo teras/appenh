@@ -19,7 +19,7 @@
  */
 package com.panayotis.appenh;
 
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -159,6 +159,12 @@ class DefaultEnhancer implements Enhancer {
 
     @Override
     public void registerThemeChanged(ThemeChangeListener callback) {
+    }
+
+    @Override
+    public void toggleFullScreen(Window window) {
+        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        device.setFullScreenWindow(device.getFullScreenWindow() == window ? null : window);
     }
 
     @Override

@@ -22,13 +22,7 @@ package com.panayotis.appenh;
 import static com.panayotis.appenh.EnhancerManager.getSelfExec;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -152,6 +146,42 @@ class LinuxEnhancer extends DefaultEnhancer {
         exec("xdg-desktop-menu", "forceupdate");
     }
 
+    @Override
+    public void fixDPI() {
+        if (!System.getProperty("sun.java2d.uiScale", "").isEmpty())
+            return;
+        if (System.getenv("GDK_SCALE") != null) // What about GDK_DPI_SCALE?
+            return;
+
+        try {
+            Process proc = Runtime.getRuntime().exec(new String[]{"xrdb", "-q"});
+            BufferedReader reader = null;
+            try {
+                //noinspection CharsetObjectCanBeUsed
+                reader = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.toLowerCase();
+                    if (line.startsWith("xft.dpi")) {
+                        int dpi = Integer.parseInt(line.substring(line.indexOf(':') + 1).trim());
+                        //noinspection IntegerDivisionInFloatingPointContext
+                        double scale = (dpi * 60 / 96) / 60d;
+                        System.setProperty("sun.java2d.uiScale", Double.toString(scale));
+                        break;
+                    }
+                }
+            } catch (Exception ignored) {
+            } finally {
+                if (reader != null)
+                    try {
+                        reader.close();
+                    } catch (Exception ignored) {
+                    }
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
     private static boolean writeFile(String path, String content) {
         Writer out = null;
         try {
@@ -253,8 +283,7 @@ class LinuxEnhancer extends DefaultEnhancer {
         try {
             Process exec = Runtime.getRuntime().exec(cmd);
             return exec.waitFor() == 0;
-        } catch (IOException ex) {
-        } catch (InterruptedException ex) {
+        } catch (Exception ignored) {
         }
         return false;
     }

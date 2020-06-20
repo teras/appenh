@@ -55,8 +55,10 @@ public interface Enhancer {
 
     void unregisterApplication(String name);
 
+    void fixDPI();
+
     /**
-     * @param frame The frame to work on
+     * @param frame     The frame to work on
      * @param iconNames Could be empty; the set application icons will be used
      */
     void updateFrameIcons(JFrame frame, String... iconNames);

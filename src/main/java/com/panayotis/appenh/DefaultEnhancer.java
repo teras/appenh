@@ -171,4 +171,8 @@ class DefaultEnhancer implements Enhancer {
     public String getThemeName() {
         return "";
     }
+
+    @Override
+    public void fixDPI() {
+    }
 }

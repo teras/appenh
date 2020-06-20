@@ -164,9 +164,7 @@ class LinuxEnhancer extends DefaultEnhancer {
                     line = line.toLowerCase();
                     if (line.startsWith("xft.dpi")) {
                         int dpi = Integer.parseInt(line.substring(line.indexOf(':') + 1).trim());
-                        //noinspection IntegerDivisionInFloatingPointContext
-                        double scale = (dpi * 60 / 96) / 60d;
-                        System.setProperty("sun.java2d.uiScale", Double.toString(scale));
+                        System.setProperty("sun.java2d.uiScale", Double.toString(Math.round(dpi / 96.0)));
                         break;
                     }
                 }

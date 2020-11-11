@@ -19,26 +19,132 @@
  */
 package com.panayotis.appenh;
 
-import static com.panayotis.appenh.EnhancerManager.getSelfExec;
+import com.panayotis.appenh.Enhancer.ThemeChangeListener;
 
+import javax.imageio.*;
+import javax.imageio.metadata.IIOInvalidTreeException;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.ImageOutputStream;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageTypeSpecifier;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.metadata.IIOInvalidTreeException;
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.metadata.IIOMetadataNode;
-import javax.imageio.stream.ImageOutputStream;
-import javax.swing.UIManager;
+import java.util.HashSet;
+
+import static com.panayotis.appenh.EnhancerManager.getSelfExec;
 
 class LinuxEnhancer extends DefaultEnhancer {
+    private LinuxThemeListenerThread themeListenerThread;
+
+    private static boolean writeFile(String path, String content) {
+        Writer out = null;
+        try {
+            File fout = new File(path);
+            fout.getParentFile().mkdirs();
+            out = new OutputStreamWriter(new FileOutputStream(fout), "UTF-8");
+            out.append(content);
+            return true;
+        } catch (IOException ex) {
+            return false;
+        } finally {
+            if (out != null)
+                try {
+                    out.close();
+                } catch (IOException ex1) {
+                }
+        }
+    }
+
+    // https://stackoverflow.com/a/8735707
+    private static boolean writeThumbnail(File input, File output, String execpath) {
+        try {
+            File exec = new File(execpath);
+            ImageWriter writer = ImageIO.getImageWritersByFormatName("png").next();
+
+            ImageWriteParam writeParam = writer.getDefaultWriteParam();
+            ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier.createFromBufferedImageType(BufferedImage.TYPE_BYTE_INDEXED);
+
+            //adding metadata
+            IIOMetadata metadata = writer.getDefaultImageMetadata(typeSpecifier, writeParam);
+            addMetaData(metadata, "Thumb::URI", toURI(exec));
+            addMetaData(metadata, "Thumb::MTime", String.valueOf(exec.lastModified() / 1000));
+
+            //writing the data
+            output.getParentFile().mkdirs();
+            BufferedOutputStream baos = new BufferedOutputStream(new FileOutputStream(output));
+            ImageOutputStream stream = ImageIO.createImageOutputStream(baos);
+            writer.setOutput(stream);
+            writer.write(metadata, new IIOImage(ImageIO.read(input), null, metadata), writeParam);
+            stream.close();
+            return true;
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
+            return false;
+        }
+    }
+
+    private static String getMD5Hash(String text) {
+        try {
+            String num = new BigInteger(1, MessageDigest.getInstance("MD5").digest(text.getBytes("UTF-8"))).toString(16);
+            while (num.length() < 32)
+                num = "0" + num;
+            return num;
+        } catch (NoSuchAlgorithmException ex) {
+        } catch (UnsupportedEncodingException ex) {
+        }
+        return null;
+    }
+
+    private static void addMetaData(IIOMetadata metadata, String key, String value) throws IIOInvalidTreeException {
+        IIOMetadataNode textEntry = new IIOMetadataNode("tEXtEntry");
+        textEntry.setAttribute("keyword", key);
+        textEntry.setAttribute("value", value);
+        IIOMetadataNode text = new IIOMetadataNode("tEXt");
+        text.appendChild(textEntry);
+        IIOMetadataNode root = new IIOMetadataNode("javax_imageio_png_1.0");
+        root.appendChild(text);
+        metadata.mergeTree("javax_imageio_png_1.0", root);
+    }
+
+    private static String getDesktopFileName(String basename) {
+        return System.getProperty("user.home") + "/.local/share/applications/" + basename + ".desktop";
+    }
+
+    private static String getThumbFilename(String exec) {
+        return System.getProperty("user.home") + "/.cache/thumbnails/normal/" + getMD5Hash(toURI(new File(exec))) + ".png";
+    }
+
+    private static String toURI(File file) {
+        String icopath = file.toURI().toString();
+        if (icopath.startsWith("file:/") && !icopath.startsWith("file:///"))
+            icopath = "file:///" + icopath.substring(6);
+        return icopath;
+    }
+
+    private static File getTempImage(Collection<BufferedImage> frameImages, int size) {
+        if (frameImages != null && !frameImages.isEmpty())
+            try {
+                File out = File.createTempFile("image-", ".png").getAbsoluteFile();
+                out.getParentFile().mkdirs();
+                ImageIO.write(EnhancerManager.getImage(frameImages, size), "png", new FileOutputStream(out));
+                return out;
+            } catch (IOException ex) {
+            }
+        return null;
+    }
+
+    private static boolean exec(String... cmd) {
+        try {
+            Process exec = Runtime.getRuntime().exec(cmd);
+            return exec.waitFor() == 0;
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
 
     @SuppressWarnings("UseSpecificCatch")
     private boolean setNoUglySystemLookAndFeel() {
@@ -157,7 +263,6 @@ class LinuxEnhancer extends DefaultEnhancer {
             Process proc = Runtime.getRuntime().exec(new String[]{"xrdb", "-q"});
             BufferedReader reader = null;
             try {
-                //noinspection CharsetObjectCanBeUsed
                 reader = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"));
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -180,109 +285,115 @@ class LinuxEnhancer extends DefaultEnhancer {
         }
     }
 
-    private static boolean writeFile(String path, String content) {
-        Writer out = null;
-        try {
-            File fout = new File(path);
-            fout.getParentFile().mkdirs();
-            out = new OutputStreamWriter(new FileOutputStream(fout), "UTF-8");
-            out.append(content);
-            return true;
-        } catch (IOException ex) {
-            return false;
-        } finally {
-            if (out != null)
-                try {
-                    out.close();
-                } catch (IOException ex1) {
-                }
-        }
-    }
-
-    // https://stackoverflow.com/a/8735707
-    private static boolean writeThumbnail(File input, File output, String execpath) {
-        try {
-            File exec = new File(execpath);
-            ImageWriter writer = ImageIO.getImageWritersByFormatName("png").next();
-
-            ImageWriteParam writeParam = writer.getDefaultWriteParam();
-            ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier.createFromBufferedImageType(BufferedImage.TYPE_BYTE_INDEXED);
-
-            //adding metadata
-            IIOMetadata metadata = writer.getDefaultImageMetadata(typeSpecifier, writeParam);
-            addMetaData(metadata, "Thumb::URI", toURI(exec));
-            addMetaData(metadata, "Thumb::MTime", String.valueOf(exec.lastModified() / 1000));
-
-            //writing the data
-            output.getParentFile().mkdirs();
-            BufferedOutputStream baos = new BufferedOutputStream(new FileOutputStream(output));
-            ImageOutputStream stream = ImageIO.createImageOutputStream(baos);
-            writer.setOutput(stream);
-            writer.write(metadata, new IIOImage(ImageIO.read(input), null, metadata), writeParam);
-            stream.close();
-            return true;
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-            return false;
-        }
-    }
-
-    private static String getMD5Hash(String text) {
-        try {
-            String num = new BigInteger(1, MessageDigest.getInstance("MD5").digest(text.getBytes("UTF-8"))).toString(16);
-            while (num.length() < 32)
-                num = "0" + num;
-            return num;
-        } catch (NoSuchAlgorithmException ex) {
-        } catch (UnsupportedEncodingException ex) {
-        }
-        return null;
-    }
-
-    private static void addMetaData(IIOMetadata metadata, String key, String value) throws IIOInvalidTreeException {
-        IIOMetadataNode textEntry = new IIOMetadataNode("tEXtEntry");
-        textEntry.setAttribute("keyword", key);
-        textEntry.setAttribute("value", value);
-        IIOMetadataNode text = new IIOMetadataNode("tEXt");
-        text.appendChild(textEntry);
-        IIOMetadataNode root = new IIOMetadataNode("javax_imageio_png_1.0");
-        root.appendChild(text);
-        metadata.mergeTree("javax_imageio_png_1.0", root);
-    }
-
-    private static String getDesktopFileName(String basename) {
-        return System.getProperty("user.home") + "/.local/share/applications/" + basename + ".desktop";
-    }
-
-    private static String getThumbFilename(String exec) {
-        return System.getProperty("user.home") + "/.cache/thumbnails/normal/" + getMD5Hash(toURI(new File(exec))) + ".png";
-    }
-
-    private static String toURI(File file) {
-        String icopath = file.toURI().toString();
-        if (icopath.startsWith("file:/") && !icopath.startsWith("file:///"))
-            icopath = "file:///" + icopath.substring(6);
-        return icopath;
-    }
-
-    private static File getTempImage(Collection<BufferedImage> frameImages, int size) {
-        if (frameImages != null && !frameImages.isEmpty())
-            try {
-                File out = File.createTempFile("image-", ".png").getAbsoluteFile();
-                out.getParentFile().mkdirs();
-                ImageIO.write(EnhancerManager.getImage(frameImages, size), "png", new FileOutputStream(out));
-                return out;
-            } catch (IOException ex) {
+    @Override
+    public void registerThemeChanged(ThemeChangeListener callback) {
+        if (callback == null)
+            return;
+        synchronized (this) {
+            if (themeListenerThread == null) {
+                themeListenerThread = new LinuxThemeListenerThread();
+                themeListenerThread.start();
             }
+        }
+        themeListenerThread.addCallback(callback);
+    }
+}
+
+class LinuxThemeListenerThread extends Thread {
+    private final Collection<ThemeChangeListener> listeners = new HashSet<ThemeChangeListener>();
+    final String dconfPath;
+    private String lastTheme;
+    private Process exec;
+
+    public LinuxThemeListenerThread() {
+        super("ThemeListenerThread");
+        dconfPath = findDconfPath();
+//        setDaemon(true);
+    }
+
+    private String findDconfPath() {
+        String PATH = System.getenv("PATH");
+        if (PATH == null)
+            PATH = "";
+        PATH += File.pathSeparator + "/usr/bin";
+        for (String location : PATH.split(File.pathSeparator)) {
+            String exec = location + File.separator + "dconf";
+            if (new File(exec).isFile())
+                return exec;
+        }
         return null;
     }
 
-    private static boolean exec(String... cmd) {
+    private void findInitialValue() {
+        Process exec;
         try {
-            Process exec = Runtime.getRuntime().exec(cmd);
-            return exec.waitFor() == 0;
-        } catch (Exception ignored) {
+            exec = Runtime.getRuntime().exec(new String[]{dconfPath, "read", "/org/gnome/desktop/interface/gtk-theme"});
+        } catch (IOException e) {
+            return;
+        }
+        BufferedReader in = null;
+        try {
+            in = new BufferedReader(new InputStreamReader(exec.getInputStream(), "UTF-8"));
+            setQuotedTheme(in.readLine());
+        } catch (IOException ignored) {
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
+    private boolean setQuotedTheme(String line) {
+        if (line.length() < 2)
+            return false;
+        String newTheme = line.substring(1, line.length() - 1);
+        if (!newTheme.equals(lastTheme)) {
+            lastTheme = newTheme;
+            return true;
         }
         return false;
+    }
+
+    @Override
+    public void run() {
+        if (dconfPath == null)
+            return;
+        findInitialValue();
+        fireThemeUpdate();
+        BufferedReader in = null;
+        try {
+            exec = Runtime.getRuntime().exec(new String[]{dconfPath, "watch", "/org/gnome/desktop/interface/gtk-theme"});
+            in = new BufferedReader(new InputStreamReader(exec.getInputStream(), "UTF-8"));
+            String line;
+            while ((line = in.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("'")) {
+                    if (setQuotedTheme(line))
+                        fireThemeUpdate();
+                }
+            }
+        } catch (IOException ignored) {
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
+    private synchronized void fireThemeUpdate() {
+        if (lastTheme != null && !listeners.isEmpty())
+            for (ThemeChangeListener listener : listeners)
+                listener.themeChanged(lastTheme);
+    }
+
+    synchronized void addCallback(ThemeChangeListener callback) {
+        listeners.add(callback);
+        fireThemeUpdate();
     }
 }

@@ -37,6 +37,7 @@ import java.util.HashSet;
 
 import static com.panayotis.appenh.EnhancerManager.getSelfExec;
 
+@SuppressWarnings({"ResultOfMethodCallIgnored", "UnusedReturnValue"})
 class LinuxEnhancer extends DefaultEnhancer {
     private LinuxThemeListenerThread themeListenerThread;
 
@@ -54,7 +55,7 @@ class LinuxEnhancer extends DefaultEnhancer {
             if (out != null)
                 try {
                     out.close();
-                } catch (IOException ex1) {
+                } catch (IOException ignored) {
                 }
         }
     }
@@ -89,12 +90,12 @@ class LinuxEnhancer extends DefaultEnhancer {
 
     private static String getMD5Hash(String text) {
         try {
-            String num = new BigInteger(1, MessageDigest.getInstance("MD5").digest(text.getBytes("UTF-8"))).toString(16);
+            StringBuilder num = new StringBuilder(new BigInteger(1, MessageDigest.getInstance("MD5").digest(text.getBytes("UTF-8"))).toString(16));
             while (num.length() < 32)
-                num = "0" + num;
-            return num;
-        } catch (NoSuchAlgorithmException ex) {
-        } catch (UnsupportedEncodingException ex) {
+                num.insert(0, "0");
+            return num.toString();
+        } catch (NoSuchAlgorithmException ignored) {
+        } catch (UnsupportedEncodingException ignored) {
         }
         return null;
     }
@@ -132,7 +133,7 @@ class LinuxEnhancer extends DefaultEnhancer {
                 out.getParentFile().mkdirs();
                 ImageIO.write(EnhancerManager.getImage(frameImages, size), "png", new FileOutputStream(out));
                 return out;
-            } catch (IOException ex) {
+            } catch (IOException ignored) {
             }
         return null;
     }
@@ -156,7 +157,7 @@ class LinuxEnhancer extends DefaultEnhancer {
                 return true;
             UIManager.setLookAndFeel(name);
             return true;
-        } catch (Exception ex1) {
+        } catch (Exception ignored) {
         }
         return false;
     }
@@ -303,12 +304,11 @@ class LinuxThemeListenerThread extends Thread {
     private final Collection<ThemeChangeListener> listeners = new HashSet<ThemeChangeListener>();
     final String dconfPath;
     private String lastTheme;
-    private Process exec;
 
     public LinuxThemeListenerThread() {
         super("ThemeListenerThread");
         dconfPath = findDconfPath();
-//        setDaemon(true);
+        setDaemon(true);
     }
 
     private String findDconfPath() {
@@ -365,7 +365,7 @@ class LinuxThemeListenerThread extends Thread {
         fireThemeUpdate();
         BufferedReader in = null;
         try {
-            exec = Runtime.getRuntime().exec(new String[]{dconfPath, "watch", "/org/gnome/desktop/interface/gtk-theme"});
+            Process exec = Runtime.getRuntime().exec(new String[]{dconfPath, "watch", "/org/gnome/desktop/interface/gtk-theme"});
             in = new BufferedReader(new InputStreamReader(exec.getInputStream(), "UTF-8"));
             String line;
             while ((line = in.readLine()) != null) {

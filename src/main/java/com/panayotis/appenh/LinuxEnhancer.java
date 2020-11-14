@@ -40,6 +40,7 @@ import static com.panayotis.appenh.EnhancerManager.getSelfExec;
 @SuppressWarnings({"ResultOfMethodCallIgnored", "UnusedReturnValue"})
 class LinuxEnhancer extends DefaultEnhancer {
     private LinuxThemeListenerThread themeListenerThread;
+    private int dpi = -1;
 
     private static boolean writeFile(String path, String content) {
         Writer out = null;
@@ -257,9 +258,14 @@ class LinuxEnhancer extends DefaultEnhancer {
     public void fixDPI() {
         if (!System.getProperty("sun.java2d.uiScale", "").isEmpty())
             return;
-        if (System.getenv("GDK_SCALE") != null) // What about GDK_DPI_SCALE?
-            return;
+        if (getDPI() > 110)
+            System.setProperty("sun.java2d.uiScale", Double.toString(Math.ceil(dpi / 96d)));
+    }
 
+    @Override
+    public int getDPI() {
+        if (dpi > 0)
+            return dpi;
         try {
             Process proc = Runtime.getRuntime().exec(new String[]{"xrdb", "-q"});
             BufferedReader reader = null;
@@ -269,8 +275,7 @@ class LinuxEnhancer extends DefaultEnhancer {
                 while ((line = reader.readLine()) != null) {
                     line = line.toLowerCase();
                     if (line.startsWith("xft.dpi")) {
-                        int dpi = Integer.parseInt(line.substring(line.indexOf(':') + 1).trim());
-                        System.setProperty("sun.java2d.uiScale", Double.toString(Math.round(dpi / 96.0)));
+                        dpi = Integer.parseInt(line.substring(line.indexOf(':') + 1).trim());
                         break;
                     }
                 }
@@ -284,6 +289,9 @@ class LinuxEnhancer extends DefaultEnhancer {
             }
         } catch (IOException ignored) {
         }
+        if (dpi < 0)
+            dpi = super.getDPI();
+        return dpi;
     }
 
     @Override

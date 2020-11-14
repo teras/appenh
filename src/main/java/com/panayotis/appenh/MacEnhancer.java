@@ -247,6 +247,13 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     }
 
     @Override
+    public void setApplicationName(String name) {
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", name);
+        System.setProperty("apple.awt.application.name", name);
+    }
+
+    @Override
     public void updateFrameIcons(JFrame frame, String... iconResourceNames) {
     }
 
@@ -273,6 +280,11 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
 
     @Override
     public void fixDPI() {
+    }
+
+    @Override
+    public int getDPI() {
+        return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
     }
 
     @Override

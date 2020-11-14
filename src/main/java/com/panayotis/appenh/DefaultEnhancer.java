@@ -19,16 +19,15 @@
  */
 package com.panayotis.appenh;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import javax.imageio.ImageIO;
-import javax.swing.*;
 
 class DefaultEnhancer implements Enhancer {
 
@@ -108,6 +107,11 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
+    public void setApplicationName(String name) {
+        // Not supported
+    }
+
+    @Override
     public void updateFrameIcons(JFrame frame, String... iconNames) {
         List<BufferedImage> ficons = new ArrayList<BufferedImage>();
         for (String icon : iconNames)
@@ -174,5 +178,10 @@ class DefaultEnhancer implements Enhancer {
 
     @Override
     public void fixDPI() {
+    }
+
+    @Override
+    public int getDPI() {
+        return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
     }
 }

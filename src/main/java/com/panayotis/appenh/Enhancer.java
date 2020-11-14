@@ -19,11 +19,11 @@
  */
 package com.panayotis.appenh;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
-import javax.swing.JFrame;
 
 public interface Enhancer {
 
@@ -51,11 +51,15 @@ public interface Enhancer {
 
     void setApplicationIcons(BufferedImage... iconNames);
 
+    void setApplicationName(String name);
+
     void registerApplication(String name, String comment, String... categories);
 
     void unregisterApplication(String name);
 
     void fixDPI();
+
+    int getDPI();
 
     /**
      * @param frame     The frame to work on

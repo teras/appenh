@@ -21,6 +21,7 @@ package com.panayotis.appenh;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -37,14 +38,12 @@ class DefaultEnhancer implements Enhancer {
     boolean setNimbusLookAndFeel() {
         if (UIManager.getLookAndFeel().getClass().getName().toLowerCase().contains("nimbus"))
             return true;
-        for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
-            if ("Nimbus".equals(info.getName()))
-                try {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    return true;
-                } catch (Exception ex) {
-                }
-        return false;
+        try {
+            UIManager.setLookAndFeel(new NimbusLookAndFeel());
+            return true;
+        } catch (UnsupportedLookAndFeelException e) {
+            return false;
+        }
     }
 
     @SuppressWarnings("UseSpecificCatch")
@@ -57,7 +56,7 @@ class DefaultEnhancer implements Enhancer {
                 return false;
             UIManager.setLookAndFeel(name);
             return true;
-        } catch (Exception ex1) {
+        } catch (Exception ignored) {
         }
         return false;
     }
@@ -177,11 +176,14 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
-    public void fixDPI() {
+    public int getDPI() {
+        return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
     }
 
     @Override
-    public int getDPI() {
-        return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
+    public boolean shouldScaleUI() {
+        if (!System.getProperty("sun.java2d.uiScale", "").isEmpty())
+            return false;
+        return getDPI() > 100;    // 96 is the value, don't scale if the value is too close;
     }
 }

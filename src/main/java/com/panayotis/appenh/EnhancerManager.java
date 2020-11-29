@@ -40,6 +40,8 @@ public class EnhancerManager {
             enhancer = new MacEnhancer();
         else if (osName.contains("linux"))
             enhancer = new LinuxEnhancer();
+        else if (osName.contains("windows"))
+            enhancer = new WindowsEnhancer();
         else
             enhancer = new DefaultEnhancer();
     }

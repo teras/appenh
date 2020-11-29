@@ -279,12 +279,13 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     }
 
     @Override
-    public void fixDPI() {
+    public int getDPI() {
+        return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
     }
 
     @Override
-    public int getDPI() {
-        return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
+    public boolean shouldScaleUI() {
+        return false;
     }
 
     @Override

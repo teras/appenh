@@ -57,9 +57,9 @@ public interface Enhancer {
 
     void unregisterApplication(String name);
 
-    void fixDPI();
-
     int getDPI();
+
+    boolean shouldScaleUI();
 
     /**
      * @param frame     The frame to work on

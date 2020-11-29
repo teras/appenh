@@ -255,14 +255,6 @@ class LinuxEnhancer extends DefaultEnhancer {
     }
 
     @Override
-    public void fixDPI() {
-        if (!System.getProperty("sun.java2d.uiScale", "").isEmpty())
-            return;
-        if (getDPI() > 110)
-            System.setProperty("sun.java2d.uiScale", Double.toString(Math.ceil(dpi / 96d)));
-    }
-
-    @Override
     public int getDPI() {
         if (dpi > 0)
             return dpi;

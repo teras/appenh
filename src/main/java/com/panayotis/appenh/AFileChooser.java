@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public class AFileChooser {
+    private static InjectedVisuals injectedVisuals;
+
     private String title;
     private String buttonTitle;
     private File directory = new File(System.getProperty("user.home"));
@@ -94,6 +96,10 @@ public class AFileChooser {
         return result;
     }
 
+    public static void injectCustomVisuals(InjectedVisuals injectedVisuals) {
+        AFileChooser.injectedVisuals = injectedVisuals;
+    }
+
     private FileChooserFactory getFactory() {
         if (EnhancerManager.getDefault() instanceof FileChooserFactory)
             return (FileChooserFactory) EnhancerManager.getDefault();
@@ -118,6 +124,8 @@ public class AFileChooser {
             fc.setApproveButtonText(buttonTitle);
             fc.setDialogTitle(title);
             fc.setMultiSelectionEnabled(openMulti);
+            if (injectedVisuals != null)
+                injectedVisuals.willShow(fc);
             fc.showOpenDialog(null);
             return Arrays.asList(fc.getSelectedFiles());
         }
@@ -128,8 +136,14 @@ public class AFileChooser {
             fc.setApproveButtonText(buttonTitle);
             fc.setSelectedFile(new File(directory, file));
             fc.setDialogTitle(title);
+            if (injectedVisuals != null)
+                injectedVisuals.willShow(fc);
             fc.showOpenDialog(null);
             return fc.getSelectedFile();
         }
     };
+
+    public interface InjectedVisuals {
+        void willShow(Object fileChooser);
+    }
 }

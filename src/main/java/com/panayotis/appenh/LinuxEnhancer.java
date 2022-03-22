@@ -302,22 +302,22 @@ class LinuxEnhancer extends DefaultEnhancer {
 
 class LinuxThemeListenerThread extends Thread {
     private final Collection<ThemeChangeListener> listeners = new HashSet<ThemeChangeListener>();
-    final String dconfPath;
+    final String gsettingsPath;
     private String lastTheme;
 
     public LinuxThemeListenerThread() {
         super("ThemeListenerThread");
-        dconfPath = findDconfPath();
+        gsettingsPath = findGsettingsPath();
         setDaemon(true);
     }
 
-    private String findDconfPath() {
+    private String findGsettingsPath() {
         String PATH = System.getenv("PATH");
         if (PATH == null)
             PATH = "";
         PATH += File.pathSeparator + "/usr/bin";
         for (String location : PATH.split(File.pathSeparator)) {
-            String exec = location + File.separator + "dconf";
+            String exec = location + File.separator + "gsettings";
             if (new File(exec).isFile())
                 return exec;
         }
@@ -327,7 +327,7 @@ class LinuxThemeListenerThread extends Thread {
     private void findInitialValue() {
         Process exec;
         try {
-            exec = Runtime.getRuntime().exec(new String[]{dconfPath, "read", "/org/gnome/desktop/interface/gtk-theme"});
+            exec = Runtime.getRuntime().exec(new String[]{gsettingsPath, "get", "org.gnome.desktop.interface", "gtk-theme"});
         } catch (IOException e) {
             return;
         }
@@ -359,13 +359,13 @@ class LinuxThemeListenerThread extends Thread {
 
     @Override
     public void run() {
-        if (dconfPath == null)
+        if (gsettingsPath == null)
             return;
         findInitialValue();
         fireThemeUpdate();
         BufferedReader in = null;
         try {
-            Process exec = Runtime.getRuntime().exec(new String[]{dconfPath, "watch", "/org/gnome/desktop/interface/gtk-theme"});
+            Process exec = Runtime.getRuntime().exec(new String[]{gsettingsPath, "monitor", "org.gnome.desktop.interface", "gtk-theme"});
             in = new BufferedReader(new InputStreamReader(exec.getInputStream(), "UTF-8"));
             String line;
             while ((line = in.readLine()) != null) {

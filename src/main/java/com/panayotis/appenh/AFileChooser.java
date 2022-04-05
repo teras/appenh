@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 public class AFileChooser {
     private static InjectedVisuals injectedVisuals;
@@ -127,7 +128,10 @@ public class AFileChooser {
             if (injectedVisuals != null)
                 injectedVisuals.willShow(fc);
             fc.showOpenDialog(null);
-            return Arrays.asList(fc.getSelectedFiles());
+            return fc.getSelectedFiles().length > 0
+                    ? Arrays.asList(fc.getSelectedFiles())
+                    : (fc.getSelectedFile() == null
+                    ? Collections.<File>emptyList() : Collections.singletonList(fc.getSelectedFile()));
         }
 
         @Override

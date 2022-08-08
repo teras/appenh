@@ -325,6 +325,7 @@ class LinuxThemeListenerThread extends Thread {
     }
 
     private void findInitialValue() {
+        // Also consider org.gnome.desktop.interface color-scheme prefer-dark/prefer-light
         Process exec;
         try {
             exec = Runtime.getRuntime().exec(new String[]{gsettingsPath, "get", "org.gnome.desktop.interface", "gtk-theme"});

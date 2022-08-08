@@ -63,30 +63,37 @@ class DefaultEnhancer implements Enhancer {
 
     @Override
     public void registerPreferences(Runnable callback) {
+        // Not supported
     }
 
     @Override
     public void registerAbout(Runnable callback) {
+        // Not supported
     }
 
     @Override
     public void registerQuit(Runnable callback) {
+        // Not supported
     }
 
     @Override
     public void registerFileOpen(Enhancer.FileOpenRunnable callback) {
+        // Not supported
     }
 
     @Override
     public void registerUpdate(Runnable callback) {
+        // Not supported
     }
 
     @Override
     public void registerUpdate(String menutext, String menushortcut, Runnable callback) {
+        // Not supported
     }
 
     @Override
     public void registerMenu(String menutext, Runnable callback) {
+        // Not supported
     }
 
     @Override

@@ -19,6 +19,7 @@
  */
 package com.panayotis.appenh;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import com.panayotis.appenh.Enhancer.ThemeChangeListener;
 
 import javax.imageio.*;
@@ -26,7 +27,6 @@ import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigInteger;
@@ -148,95 +148,75 @@ class LinuxEnhancer extends DefaultEnhancer {
         return false;
     }
 
-    @SuppressWarnings("UseSpecificCatch")
-    private boolean setNoUglySystemLookAndFeel() {
-        try {
-            String name = UIManager.getSystemLookAndFeelClassName();
-            if (name.contains("MetalLookAndFeel") || name.contains("GTKLookAndFeel"))
-                return false;
-            if (UIManager.getLookAndFeel().getClass().getName().equals(name))
-                return true;
-            UIManager.setLookAndFeel(name);
-            return true;
-        } catch (Exception ignored) {
-        }
-        return false;
-    }
-
     @Override
-    public void setSafeLookAndFeel() {
-        if (!setNoUglySystemLookAndFeel())
-            setNimbusLookAndFeel();
+    boolean setSystemLookAndFeel() {
+        return FlatLightLaf.setup();
     }
 
     @Override
     public void registerApplication(final String name_s, final String comment_s, final String... categories) {
-        new Thread() {
+        new Thread(() -> {
+            String name = name_s;
+            String comment = comment_s;
+            if (name == null || name.trim().isEmpty())
+                return;
+            else
+                name = name.trim();
+            String basename = name.toLowerCase();
 
-            @Override
-            public void run() {
-                String name = name_s;
-                String comment = comment_s;
-                if (name == null || name.trim().isEmpty())
-                    return;
-                else
-                    name = name.trim();
-                String basename = name.toLowerCase();
+            if (comment == null)
+                comment = "";
+            else
+                comment = comment.trim();
 
-                if (comment == null)
-                    comment = "";
-                else
-                    comment = comment.trim();
+            String exec = getSelfExec();
+            if (exec == null)
+                return;
 
-                String exec = getSelfExec();
-                if (exec == null)
-                    return;
-
-                StringBuilder out = new StringBuilder();
-                out.append("[Desktop Entry]\n");
-                out.append("Type=Application\n");
-                out.append("Name=").append(name).append("\n");
-                out.append("Exec=").append(exec).append(" %U\n");
-                out.append("TryExec=").append(exec).append("\n");
-                if (categories != null && categories.length > 0) {
-                    StringBuilder cat = new StringBuilder();
-                    for (String ct : categories)
-                        cat.append(ct).append(';');
-                    if (cat.length() > 0)
-                        out.append("Categories=").append(cat).append("\n");
-                }
-                if (!comment.isEmpty())
-                    out.append("Comment=").append(comment).append("\n");
-
-                if (!frameImages.isEmpty()) {
-                    out.append("Icon=").append(basename).append("\n");
-                    File img32 = getTempImage(frameImages, 32);
-                    File img64 = getTempImage(frameImages, 64);
-                    File parent = new File(System.getProperty("user.home"), ".cache/appenh");
-                    parent.mkdirs();
-                    File img128 = new File(parent, basename + ".png");
-                    try {
-                        img128.getParentFile().mkdirs();
-                        ImageIO.write(EnhancerManager.getImage(frameImages, 128), "png", new FileOutputStream(img128));
-                    } catch (IOException ex) {
-                        ex.printStackTrace(System.err);
-                    }
-                    exec("gio", "set", "-t", "string", exec, "metadata::custom-icon", toURI(img128));
-
-                    exec("xdg-icon-resource", "install", "--novendor", "--size", "32", img32.getAbsolutePath(), basename);
-                    exec("xdg-icon-resource", "install", "--novendor", "--size", "64", img64.getAbsolutePath(), basename);
-                    exec("xdg-icon-resource", "install", "--novendor", "--size", "128", img128.getAbsolutePath(), basename);
-                    writeThumbnail(img128, new File(getThumbFilename(exec)), exec);
-                    img32.delete();
-                    img64.delete();
-                }
-
-                writeFile(getDesktopFileName(basename), out.toString());
-                exec("chmod", "755", getDesktopFileName(basename));
-
-                exec("xdg-desktop-menu", "forceupdate");
+            StringBuilder out = new StringBuilder();
+            out.append("[Desktop Entry]\n");
+            out.append("Type=Application\n");
+            out.append("Name=").append(name).append("\n");
+            out.append("Exec=").append(exec).append(" %U\n");
+            out.append("TryExec=").append(exec).append("\n");
+            if (categories != null && categories.length > 0) {
+                StringBuilder cat = new StringBuilder();
+                for (String ct : categories)
+                    cat.append(ct).append(';');
+                if (cat.length() > 0)
+                    out.append("Categories=").append(cat).append("\n");
             }
-        }.start();
+            if (!comment.isEmpty())
+                out.append("Comment=").append(comment).append("\n");
+
+            if (!frameImages.isEmpty()) {
+                out.append("Icon=").append(basename).append("\n");
+                File img32 = getTempImage(frameImages, 32);
+                File img64 = getTempImage(frameImages, 64);
+                File parent = new File(System.getProperty("user.home"), ".cache/appenh");
+                parent.mkdirs();
+                File img128 = new File(parent, basename + ".png");
+                try {
+                    img128.getParentFile().mkdirs();
+                    ImageIO.write(EnhancerManager.getImage(frameImages, 128), "png", new FileOutputStream(img128));
+                } catch (IOException ex) {
+                    ex.printStackTrace(System.err);
+                }
+                exec("gio", "set", "-t", "string", exec, "metadata::custom-icon", toURI(img128));
+
+                exec("xdg-icon-resource", "install", "--novendor", "--size", "32", img32.getAbsolutePath(), basename);
+                exec("xdg-icon-resource", "install", "--novendor", "--size", "64", img64.getAbsolutePath(), basename);
+                exec("xdg-icon-resource", "install", "--novendor", "--size", "128", img128.getAbsolutePath(), basename);
+                writeThumbnail(img128, new File(getThumbFilename(exec)), exec);
+                img32.delete();
+                img64.delete();
+            }
+
+            writeFile(getDesktopFileName(basename), out.toString());
+            exec("chmod", "755", getDesktopFileName(basename));
+
+            exec("xdg-desktop-menu", "forceupdate");
+        }).start();
     }
 
     @Override

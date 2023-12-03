@@ -152,6 +152,7 @@ class DefaultEnhancer implements Enhancer {
     public void setSafeLookAndFeel() {
         if (!setSystemLookAndFeel())
             setNimbusLookAndFeel();
+        UIManager.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     }
 
     @Override

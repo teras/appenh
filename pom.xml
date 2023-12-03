@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.panayotis</groupId>
     <artifactId>appenh</artifactId>
-    <version>0.6.1</version>
+    <version>0.7</version>
     <name>Application Enhancer</name>
     <description>Cross-platform access of java application properties, such as application icon, mac os about box, theme
         and quit listener
@@ -14,8 +14,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
     <build>
@@ -45,6 +45,11 @@
             <groupId>com.panayotis</groupId>
             <artifactId>loadlib</artifactId>
             <version>0.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.2.5</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

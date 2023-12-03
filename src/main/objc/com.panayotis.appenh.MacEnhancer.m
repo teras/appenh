@@ -1,5 +1,5 @@
 #include "com.panayotis.appenh.MacEnhancer.h"
-#include <Foundation/NSObjCRuntime.h>
+#include <Foundation/Foundation.h>
 #include <AppKit/AppKit.h>
 #import <Cocoa/Cocoa.h>
 

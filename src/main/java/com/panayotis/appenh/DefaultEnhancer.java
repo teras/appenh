@@ -149,6 +149,10 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
+    public void blendWindowTitle(boolean blended) {
+    }
+
+    @Override
     public void setSafeLookAndFeel() {
         if (!setSystemLookAndFeel())
             setNimbusLookAndFeel();

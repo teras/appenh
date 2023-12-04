@@ -216,6 +216,10 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     private native void registerThemeChanged0(ThemeChangeListener callback);
 
     @Override
+    public void blendWindowTitle(boolean blended) {
+    }
+
+    @Override
     public void setSafeLookAndFeel() {
     }
 

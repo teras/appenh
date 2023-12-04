@@ -27,6 +27,8 @@ import java.util.Collection;
 
 public interface Enhancer {
 
+    void blendWindowTitle(boolean blended);
+
     void setSafeLookAndFeel();
 
     void setDefaultLookAndFeel();

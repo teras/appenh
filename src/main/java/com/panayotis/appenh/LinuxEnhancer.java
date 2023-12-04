@@ -27,6 +27,7 @@ import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigInteger;
@@ -277,6 +278,12 @@ class LinuxEnhancer extends DefaultEnhancer {
             }
         }
         themeListenerThread.addCallback(callback);
+    }
+
+    @Override
+    public void blendWindowTitle(boolean blended) {
+        JFrame.setDefaultLookAndFeelDecorated(blended);
+        JDialog.setDefaultLookAndFeelDecorated(blended);
     }
 }
 

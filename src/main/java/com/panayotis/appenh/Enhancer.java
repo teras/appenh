@@ -51,7 +51,7 @@ public interface Enhancer {
 
     void setApplicationIcons(String... iconNames);
 
-    void setApplicationIcons(BufferedImage... iconNames);
+    void setApplicationIcons(Image... icons);
 
     void setApplicationName(String name);
 

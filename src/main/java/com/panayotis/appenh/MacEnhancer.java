@@ -24,7 +24,6 @@ import com.panayotis.loadlib.LoadLib;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -68,6 +67,10 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
         appInstance = aInst;
         packpref = ppref;
         libFound = LoadLib.load(LIB_LOCATION);
+    }
+
+    {
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
     }
 
     @Override
@@ -236,9 +239,9 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     public void setApplicationIcons(String... iconNames) {
         if (appInstance == null)
             return;
-        List<BufferedImage> appImages = new ArrayList<BufferedImage>();
+        List<Image> appImages = new ArrayList<>();
         for (String icon : iconNames)
-            EnhancerManager.appendToList(appImages, "resource " + icon, EnhancerManager.getImage(icon));
+            appImages.add(EnhancerManager.getImage(icon));
         if (!appImages.isEmpty())
             try {
                 appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, EnhancerManager.getImage(appImages, 1024));
@@ -247,12 +250,11 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     }
 
     @Override
-    public void setApplicationIcons(BufferedImage... iconNames) {
+    public void setApplicationIcons(Image... icons) {
     }
 
     @Override
     public void setApplicationName(String name) {
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", name);
         System.setProperty("apple.awt.application.name", name);
     }

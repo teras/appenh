@@ -19,16 +19,15 @@
  */
 package com.panayotis.appenh;
 
-import java.awt.Graphics2D;
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import javax.imageio.ImageIO;
-import javax.swing.*;
+import java.util.stream.Collectors;
 
 public class EnhancerManager {
 
@@ -62,9 +61,18 @@ public class EnhancerManager {
         return null;
     }
 
-    static BufferedImage getImage(Collection<BufferedImage> images, int dimension) {
-        if (images == null || images.isEmpty())
+    static BufferedImage getImage(Collection<? extends Image> imageCollection, int dimension) {
+        if (imageCollection == null || imageCollection.isEmpty())
             return null;
+        Collection<BufferedImage> images = imageCollection.stream().map(it -> {
+            if (it instanceof BufferedImage)
+                return (BufferedImage) it;
+            else {
+                BufferedImage bi = new BufferedImage(it.getWidth(null), it.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+                bi.getGraphics().drawImage(it, 0, 0, null);
+                return bi;
+            }
+        }).collect(Collectors.toList());
         for (BufferedImage img : images)
             if (img.getWidth() == dimension)
                 return img;
@@ -91,14 +99,5 @@ public class EnhancerManager {
     static String getSelfExec() {
         String exec = System.getenv().get("APPIMAGE");
         return exec == null ? System.getProperty("self.exec", null) : exec;
-    }
-
-    static void appendToList(List<BufferedImage> images, String name, BufferedImage img) {
-        if (img == null)
-            return;
-        if (img.getWidth() == img.getHeight())
-            images.add(img);
-        else
-            System.err.println("Width (" + img.getWidth() + ") and height (" + img.getHeight() + ") does not match; ignoring" + (name == null ? "" : " " + name) + ".");
     }
 }

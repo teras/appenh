@@ -32,7 +32,7 @@ import java.util.List;
 
 class DefaultEnhancer implements Enhancer {
 
-    final List<BufferedImage> frameImages = new ArrayList<BufferedImage>();
+    final List<Image> frameImages = new ArrayList<>();
 
     @SuppressWarnings("UseSpecificCatch")
     boolean setNimbusLookAndFeel() {
@@ -104,12 +104,13 @@ class DefaultEnhancer implements Enhancer {
     @Override
     public void setApplicationIcons(String... iconNames) {
         for (String icon : iconNames)
-            EnhancerManager.appendToList(frameImages, "resource " + icon, EnhancerManager.getImage(icon));
+            frameImages.add(EnhancerManager.getImage(icon));
     }
 
-    public void setApplicationIcons(BufferedImage... images) {
-        for (BufferedImage img : images)
-            EnhancerManager.appendToList(frameImages, "", img);
+    @Override
+    public void setApplicationIcons(Image... icons) {
+        for (Image img : icons)
+            frameImages.add(img);
     }
 
     @Override
@@ -119,9 +120,9 @@ class DefaultEnhancer implements Enhancer {
 
     @Override
     public void updateFrameIcons(JFrame frame, String... iconNames) {
-        List<BufferedImage> ficons = new ArrayList<BufferedImage>();
+        List<Image> ficons = new ArrayList<>();
         for (String icon : iconNames)
-            EnhancerManager.appendToList(ficons, "resource " + icon, EnhancerManager.getImage(icon));
+            ficons.add(EnhancerManager.getImage(icon));
         frame.setIconImages(ficons.isEmpty() ? frameImages : ficons);
     }
 

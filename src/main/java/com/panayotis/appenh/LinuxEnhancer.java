@@ -28,6 +28,7 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigInteger;
@@ -128,7 +129,7 @@ class LinuxEnhancer extends DefaultEnhancer {
         return icopath;
     }
 
-    private static File getTempImage(Collection<BufferedImage> frameImages, int size) {
+    private static File getTempImage(Collection<Image> frameImages, int size) {
         if (frameImages != null && !frameImages.isEmpty())
             try {
                 File out = File.createTempFile("image-", ".png").getAbsoluteFile();

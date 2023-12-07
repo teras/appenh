@@ -34,6 +34,13 @@ class WindowsEnhancer extends DefaultEnhancer {
     }
 
     @Override
+    public void blendWindowTitle(boolean blended) {
+        String value = blended ? "true" : "false";
+        System.setProperty("flatlaf.useWindowDecorations", value);
+        System.setProperty("flatlaf.menuBarEmbedded", value);
+    }
+
+    @Override
     public boolean shouldScaleUI() {
         return scaleUI;
     }

@@ -223,7 +223,7 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     }
 
     @Override
-    public void setSafeLookAndFeel() {
+    public void setModernLookAndFeel() {
     }
 
     @Override

@@ -21,7 +21,6 @@ package com.panayotis.appenh;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
 
@@ -29,7 +28,7 @@ public interface Enhancer {
 
     void blendWindowTitle(boolean blended);
 
-    void setSafeLookAndFeel();
+    void setModernLookAndFeel();
 
     void setDefaultLookAndFeel();
 

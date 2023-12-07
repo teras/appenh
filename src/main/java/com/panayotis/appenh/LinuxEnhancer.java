@@ -151,11 +151,6 @@ class LinuxEnhancer extends DefaultEnhancer {
     }
 
     @Override
-    boolean setSystemLookAndFeel() {
-        return FlatLightLaf.setup();
-    }
-
-    @Override
     public void registerApplication(final String name_s, final String comment_s, final String... categories) {
         new Thread(() -> {
             String name = name_s;

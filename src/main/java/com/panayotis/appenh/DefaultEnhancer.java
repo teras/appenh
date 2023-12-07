@@ -19,11 +19,11 @@
  */
 package com.panayotis.appenh;
 
+import com.formdev.flatlaf.FlatLightLaf;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,33 +33,6 @@ import java.util.List;
 class DefaultEnhancer implements Enhancer {
 
     final List<Image> frameImages = new ArrayList<>();
-
-    @SuppressWarnings("UseSpecificCatch")
-    boolean setNimbusLookAndFeel() {
-        if (UIManager.getLookAndFeel().getClass().getName().toLowerCase().contains("nimbus"))
-            return true;
-        try {
-            UIManager.setLookAndFeel(new NimbusLookAndFeel());
-            return true;
-        } catch (UnsupportedLookAndFeelException e) {
-            return false;
-        }
-    }
-
-    @SuppressWarnings("UseSpecificCatch")
-    boolean setSystemLookAndFeel() {
-        try {
-            String name = UIManager.getSystemLookAndFeelClassName();
-            if (UIManager.getLookAndFeel().getClass().getName().equals("name"))
-                return true;
-            if (name.contains("MetalLookAndFeel"))
-                return false;
-            UIManager.setLookAndFeel(name);
-            return true;
-        } catch (Exception ignored) {
-        }
-        return false;
-    }
 
     @Override
     public void registerPreferences(Runnable callback) {
@@ -154,15 +127,19 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
-    public void setSafeLookAndFeel() {
-        if (!setSystemLookAndFeel())
-            setNimbusLookAndFeel();
-        UIManager.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+    public void setModernLookAndFeel() {
+        FlatLightLaf.setup();
     }
 
     @Override
     public void setDefaultLookAndFeel() {
-        setSystemLookAndFeel();
+        try {
+            String name = UIManager.getSystemLookAndFeelClassName();
+            if (UIManager.getLookAndFeel().getClass().getName().equals("name") || name.contains("MetalLookAndFeel"))
+                return;
+            UIManager.setLookAndFeel(name);
+        } catch (Exception ignored) {
+        }
     }
 
     @Override

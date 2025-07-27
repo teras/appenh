@@ -21,27 +21,10 @@ package com.panayotis.appenh;
 
 @SuppressWarnings("UseSpecificCatch")
 class WindowsEnhancer extends DefaultEnhancer {
-    private final boolean scaleUI = calculateIfUIShouldBeScaled();
-
-    private boolean calculateIfUIShouldBeScaled() {
-        try {
-            if (Double.parseDouble(System.getProperty("os.version")) < 10)  // needs Windows 10
-                return true;
-        } catch (NumberFormatException ignored) {
-        }
-        // Needs Java 9+
-        return System.getProperty("java.version", "1.").startsWith("1.");
-    }
-
     @Override
     public void blendWindowTitle(boolean blended) {
         String value = blended ? "true" : "false";
         System.setProperty("flatlaf.useWindowDecorations", value);
         System.setProperty("flatlaf.menuBarEmbedded", value);
-    }
-
-    @Override
-    public boolean shouldScaleUI() {
-        return scaleUI;
     }
 }

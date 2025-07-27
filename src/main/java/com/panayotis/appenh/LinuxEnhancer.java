@@ -19,7 +19,6 @@
  */
 package com.panayotis.appenh;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import com.panayotis.appenh.Enhancer.ThemeChangeListener;
 
 import javax.imageio.*;

@@ -19,10 +19,15 @@
  */
 package com.panayotis.appenh;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.extras.FlatSVGUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public interface Enhancer {
 
@@ -52,6 +57,28 @@ public interface Enhancer {
 
     void setApplicationIcons(Image... icons);
 
+    default ImageIcon findSVGIcon(String absoluteResourceName, float scaleFactor) {
+        try {
+            if (absoluteResourceName.startsWith("/"))
+                absoluteResourceName = absoluteResourceName.substring(1);
+            return new FlatSVGIcon(absoluteResourceName, scaleFactor);
+        } catch (Exception e) {
+            System.err.println("Unable to load icon " + absoluteResourceName);
+            return null;
+        }
+    }
+
+    default List<Image> findFrameImages(String absoluteResourceName) {
+        try {
+            if (!absoluteResourceName.startsWith("/"))
+                absoluteResourceName = "/" + absoluteResourceName;
+            return FlatSVGUtils.createWindowIconImages(absoluteResourceName);
+        } catch (Exception e) {
+            System.err.println("Unable to load frame icons " + absoluteResourceName);
+            return Collections.emptyList();
+        }
+    }
+
     void setApplicationName(String name);
 
     void registerApplication(String name, String comment, String... categories);
@@ -59,8 +86,6 @@ public interface Enhancer {
     void unregisterApplication(String name);
 
     int getDPI();
-
-    boolean shouldScaleUI();
 
     /**
      * @param frame     The frame to work on

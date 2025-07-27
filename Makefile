@@ -34,7 +34,7 @@ ${LIBRARY}: ${SOURCES}
 	${CC} ${CFLAGS} ${LIBFLAGS} -arch x86_64 -o ${TEMP_LIB}.intel ${SOURCES}
 	${CC} ${CFLAGS} ${LIBFLAGS} -arch arm64  -o ${TEMP_LIB}.arm ${SOURCES}
 	lipo ${TEMP_LIB}.intel ${TEMP_LIB}.arm -create -output ${LIBRARY}
-	echo "WARNING!!! REMEMBER TO SUGN THIS LIBRARY"
+	echo "WARNING!!! REMEMBER TO SIGN THIS LIBRARY"
 
 sign:${LIBRARY}
 	rcodesign sign --p12-file ~/.ssh/apple-developer.p12 --p12-password-file ~/.ssh/apple-sign.password --code-signature-flags runtime ${LIBRARY}

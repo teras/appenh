@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.panayotis</groupId>
     <artifactId>appenh</artifactId>
-    <version>0.7</version>
+    <version>0.7.1</version>
     <name>Application Enhancer</name>
-    <description>Cross-platform access of java application properties, such as application icon, mac os about box, theme
+    <description>Cross-platform access of Java application properties, such as application icon, macOS about box, theme
         and quit listener
     </description>
     <url>https://github.com/teras/appenh</url>
@@ -16,6 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <flatlaf.version>3.6.1</flatlaf.version>
     </properties>
 
     <build>
@@ -49,7 +50,12 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>3.2.5</version>
+            <version>${flatlaf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-extras</artifactId>
+            <version>${flatlaf.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -102,7 +108,15 @@
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
                         </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.thoughtworks.xstream</groupId>
+                                <artifactId>xstream</artifactId>
+                                <version>1.4.15</version> <!-- apparently this needs to be exactly this version -->
+                            </dependency>
+                        </dependencies>
                     </plugin>
+
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>

@@ -290,11 +290,6 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     }
 
     @Override
-    public boolean shouldScaleUI() {
-        return false;
-    }
-
-    @Override
     public Collection<File> showOpenDialog(final String title, final String buttonTitle, final File directory, final boolean openMulti, FileSelectionMode mode) {
         final FileSelectionMode cmode = mode == null ? FilesOnly : mode;
         return showDialogCommon(new OpenDialogLambda() {

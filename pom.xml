@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.panayotis</groupId>
     <artifactId>appenh</artifactId>
-    <version>0.7.1</version>
+    <version>0.8.0</version>
     <name>Application Enhancer</name>
     <description>Cross-platform access of Java application properties, such as application icon, macOS about box, theme
         and quit listener
@@ -112,7 +112,7 @@
                             <dependency>
                                 <groupId>com.thoughtworks.xstream</groupId>
                                 <artifactId>xstream</artifactId>
-                                <version>1.4.21</version> <!-- apparently this needs to be exactly this version -->
+                                <version>1.4.21</version>
                             </dependency>
                         </dependencies>
                     </plugin>

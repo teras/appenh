@@ -19,6 +19,8 @@
  */
 package com.panayotis.appenh;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
 
@@ -31,11 +33,24 @@ import java.util.List;
 
 public interface Enhancer {
 
-    void blendWindowTitle(boolean blended);
+    default void setModernLookAndFeel(ThemeVariation themeVariation) {
+        if (themeVariation == null || themeVariation == ThemeVariation.LIGHT)
+            FlatLightLaf.setup();
+        else if (themeVariation == ThemeVariation.DARK)
+            FlatDarkLaf.setup();
+        else if (themeVariation == ThemeVariation.AUTO) {
+            if (isDarkTheme())
+                FlatDarkLaf.setup();
+            else
+                FlatLightLaf.setup();
+        }
+    }
 
-    void setModernLookAndFeel();
-
-    void setDefaultLookAndFeel();
+    default void blendWindowTitle(boolean blended) {
+        String value = blended ? "true" : "false";
+        System.setProperty("flatlaf.useWindowDecorations", value);
+        System.setProperty("flatlaf.menuBarEmbedded", value);
+    }
 
     void registerPreferences(Runnable callback);
 
@@ -43,19 +58,11 @@ public interface Enhancer {
 
     void registerQuit(Runnable callback);
 
-    void registerUpdate(String menutext, String menushortcut, Runnable callback);
-
-    void registerMenu(String menutext, Runnable callback);
-
-    void registerUpdate(Runnable callback);
-
     void registerFileOpen(FileOpenRunnable callback);
 
     boolean providesSystemMenus();
 
-    void setApplicationIcons(String... iconNames);
-
-    void setApplicationIcons(Image... icons);
+    void setApplicationImages(Image... images);
 
     default ImageIcon findSVGIcon(String absoluteResourceName, float scaleFactor) {
         try {
@@ -99,18 +106,13 @@ public interface Enhancer {
 
     void setFrameSaveState(JFrame frame, boolean notSaved);
 
-    void registerThemeChanged(ThemeChangeListener callback);
-
     void toggleFullScreen(Window window);
 
-    String getThemeName();
+    boolean isDarkTheme();
 
     interface FileOpenRunnable {
 
         void openFile(File file);
     }
 
-    interface ThemeChangeListener {
-        void themeChanged(String themeName);
-    }
 }

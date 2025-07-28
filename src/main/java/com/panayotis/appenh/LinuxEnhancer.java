@@ -19,8 +19,6 @@
  */
 package com.panayotis.appenh;
 
-import com.panayotis.appenh.Enhancer.ThemeChangeListener;
-
 import javax.imageio.*;
 import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadata;
@@ -34,13 +32,11 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
-import java.util.HashSet;
 
 import static com.panayotis.appenh.EnhancerManager.getSelfExec;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored", "UnusedReturnValue"})
 class LinuxEnhancer extends DefaultEnhancer {
-    private LinuxThemeListenerThread themeListenerThread;
     private int dpi = -1;
 
     private static boolean writeFile(String path, String content) {
@@ -263,120 +259,66 @@ class LinuxEnhancer extends DefaultEnhancer {
     }
 
     @Override
-    public void registerThemeChanged(ThemeChangeListener callback) {
-        if (callback == null)
-            return;
-        synchronized (this) {
-            if (themeListenerThread == null) {
-                themeListenerThread = new LinuxThemeListenerThread();
-                themeListenerThread.start();
-            }
-        }
-        themeListenerThread.addCallback(callback);
-    }
-
-    @Override
     public void blendWindowTitle(boolean blended) {
         JFrame.setDefaultLookAndFeelDecorated(blended);
         JDialog.setDefaultLookAndFeelDecorated(blended);
     }
-}
-
-class LinuxThemeListenerThread extends Thread {
-    private final Collection<ThemeChangeListener> listeners = new HashSet<ThemeChangeListener>();
-    final String gsettingsPath;
-    private String lastTheme;
-
-    public LinuxThemeListenerThread() {
-        super("ThemeListenerThread");
-        gsettingsPath = findGsettingsPath();
-        setDaemon(true);
-    }
-
-    private String findGsettingsPath() {
-        String PATH = System.getenv("PATH");
-        if (PATH == null)
-            PATH = "";
-        PATH += File.pathSeparator + "/usr/bin";
-        for (String location : PATH.split(File.pathSeparator)) {
-            String exec = location + File.separator + "gsettings";
-            if (new File(exec).isFile())
-                return exec;
-        }
-        return null;
-    }
-
-    private void findInitialValue() {
-        // Also consider org.gnome.desktop.interface color-scheme prefer-dark/prefer-light
-        Process exec;
-        try {
-            exec = Runtime.getRuntime().exec(new String[]{gsettingsPath, "get", "org.gnome.desktop.interface", "gtk-theme"});
-        } catch (IOException e) {
-            return;
-        }
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new InputStreamReader(exec.getInputStream(), "UTF-8"));
-            setQuotedTheme(in.readLine());
-        } catch (IOException ignored) {
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ignored) {
-                }
-            }
-        }
-    }
-
-    private boolean setQuotedTheme(String line) {
-        if (line.length() < 2)
-            return false;
-        String newTheme = line.substring(1, line.length() - 1);
-        if (!newTheme.equals(lastTheme)) {
-            lastTheme = newTheme;
-            return true;
-        }
-        return false;
-    }
 
     @Override
-    public void run() {
-        if (gsettingsPath == null)
-            return;
-        findInitialValue();
-        fireThemeUpdate();
-        BufferedReader in = null;
-        try {
-            Process exec = Runtime.getRuntime().exec(new String[]{gsettingsPath, "monitor", "org.gnome.desktop.interface", "gtk-theme"});
-            in = new BufferedReader(new InputStreamReader(exec.getInputStream(), "UTF-8"));
-            String line;
-            while ((line = in.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("'")) {
-                    if (setQuotedTheme(line))
-                        fireThemeUpdate();
-                }
-            }
-        } catch (IOException ignored) {
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ignored) {
-                }
-            }
+    public boolean isDarkTheme() {
+        String de = detectDesktopEnvironment();
+        switch (de) {
+            case "GNOME":
+                return isDarkModeEnabledGNOME();
+            case "KDE":
+                return isDarkModeEnabledKDE();
+            default:
+                return false; // unknown or unsupported
         }
     }
 
-    private synchronized void fireThemeUpdate() {
-        if (lastTheme != null && !listeners.isEmpty())
-            for (ThemeChangeListener listener : listeners)
-                listener.themeChanged(lastTheme);
+
+    private static String detectDesktopEnvironment() {
+        String xdgCurrentDesktop = System.getenv("XDG_CURRENT_DESKTOP");
+        String desktopSession = System.getenv("DESKTOP_SESSION");
+
+        if (xdgCurrentDesktop != null) {
+            if (xdgCurrentDesktop.toLowerCase().contains("gnome")) return "GNOME";
+            if (xdgCurrentDesktop.toLowerCase().contains("kde") || xdgCurrentDesktop.toLowerCase().contains("plasma"))
+                return "KDE";
+        }
+
+        if (desktopSession != null) {
+            if (desktopSession.toLowerCase().contains("gnome")) return "GNOME";
+            if (desktopSession.toLowerCase().contains("kde") || xdgCurrentDesktop.toLowerCase().contains("plasma"))
+                return "KDE";
+        }
+        return "UNKNOWN";
     }
 
-    synchronized void addCallback(ThemeChangeListener callback) {
-        listeners.add(callback);
-        fireThemeUpdate();
+    private static boolean isDarkModeEnabledGNOME() {
+        try {
+            Process process = new ProcessBuilder("gsettings", "get", "org.gnome.desktop.interface", "gtk-theme")
+                    .redirectErrorStream(true).start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line = reader.readLine();
+                return line != null && line.toLowerCase().contains("dark");
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean isDarkModeEnabledKDE() {
+        File config = new File(System.getProperty("user.home") + "/.config/kdeglobals");
+        if (!config.exists()) return false;
+        try (BufferedReader reader = new BufferedReader(new FileReader(config))) {
+            String line;
+            while ((line = reader.readLine()) != null)
+                if (line.trim().startsWith("LookAndFeelPackage"))
+                    return line.toLowerCase().contains("dark");
+        } catch (IOException ignored) {
+        }
+        return false;
     }
 }

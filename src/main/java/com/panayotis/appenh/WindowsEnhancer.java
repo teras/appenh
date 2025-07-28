@@ -19,12 +19,31 @@
  */
 package com.panayotis.appenh;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 @SuppressWarnings("UseSpecificCatch")
 class WindowsEnhancer extends DefaultEnhancer {
     @Override
-    public void blendWindowTitle(boolean blended) {
-        String value = blended ? "true" : "false";
-        System.setProperty("flatlaf.useWindowDecorations", value);
-        System.setProperty("flatlaf.menuBarEmbedded", value);
+    public boolean isDarkTheme() {
+        try {
+            Process process = new ProcessBuilder("reg", "query",
+                    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                    "/v", "AppsUseLightTheme")
+                    .redirectErrorStream(true)
+                    .start();
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("AppsUseLightTheme")) {
+                        return line.trim().endsWith("0x0");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // fallback: assume light mode
+        }
+        return false;
     }
 }

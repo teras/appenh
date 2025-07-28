@@ -19,8 +19,6 @@
  */
 package com.panayotis.appenh;
 
-import com.formdev.flatlaf.FlatLightLaf;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -55,34 +53,13 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
-    public void registerUpdate(Runnable callback) {
-        // Not supported
-    }
-
-    @Override
-    public void registerUpdate(String menutext, String menushortcut, Runnable callback) {
-        // Not supported
-    }
-
-    @Override
-    public void registerMenu(String menutext, Runnable callback) {
-        // Not supported
-    }
-
-    @Override
     public boolean providesSystemMenus() {
         return false;
     }
 
     @Override
-    public void setApplicationIcons(String... iconNames) {
-        for (String icon : iconNames)
-            frameImages.add(EnhancerManager.getImage(icon));
-    }
-
-    @Override
-    public void setApplicationIcons(Image... icons) {
-        for (Image img : icons)
+    public void setApplicationImages(Image... images) {
+        for (Image img : images)
             frameImages.add(img);
     }
 
@@ -127,31 +104,11 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
-    public void setModernLookAndFeel() {
-        FlatLightLaf.setup();
-    }
-
-    @Override
-    public void setDefaultLookAndFeel() {
-        try {
-            String name = UIManager.getSystemLookAndFeelClassName();
-            if (UIManager.getLookAndFeel().getClass().getName().equals("name") || name.contains("MetalLookAndFeel"))
-                return;
-            UIManager.setLookAndFeel(name);
-        } catch (Exception ignored) {
-        }
-    }
-
-    @Override
     public void registerApplication(String name, String comment, String... categories) {
     }
 
     @Override
     public void unregisterApplication(String name) {
-    }
-
-    @Override
-    public void registerThemeChanged(ThemeChangeListener callback) {
     }
 
     @Override
@@ -161,19 +118,12 @@ class DefaultEnhancer implements Enhancer {
     }
 
     @Override
-    public String getThemeName() {
-        return "";
-    }
-
-    @Override
     public int getDPI() {
         return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
     }
 
     @Override
-    public boolean shouldScaleUI() {
-        if (!System.getProperty("sun.java2d.uiScale", "").isEmpty())
-            return false;
-        return getDPI() > 100;    // 96 is the value, don't scale if the value is too close;
+    public boolean isDarkTheme() {
+        return false;
     }
 }

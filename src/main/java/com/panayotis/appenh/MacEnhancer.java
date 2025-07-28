@@ -19,31 +19,24 @@
  */
 package com.panayotis.appenh;
 
-import com.panayotis.appenh.AFileChooser.FileSelectionMode;
-import com.panayotis.loadlib.LoadLib;
-
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.panayotis.appenh.AFileChooser.FileSelectionMode.*;
-
 @SuppressWarnings("UseSpecificCatch")
-class MacEnhancer implements Enhancer, FileChooserFactory {
+class MacEnhancer implements Enhancer {
 
     private static final Class<?> appClass;
     private static final Object appInstance;
     private static final String packpref;
-    private static final boolean libFound;
-
-    static final String LIB_LOCATION = "/com/panayotis/appenh/libmacenh.dylib";
 
     static {
         Class<?> aCass = null;
@@ -66,7 +59,6 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
         appClass = aCass;
         appInstance = aInst;
         packpref = ppref;
-        libFound = LoadLib.load(LIB_LOCATION);
     }
 
     {
@@ -156,51 +148,6 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     }
 
     @Override
-    public void registerMenu(String menutext, Runnable callback) {
-        if (menutext == null || menutext.trim().isEmpty())
-            return;
-        registerUpdate(menutext, null, callback);
-    }
-
-    @Override
-    public void registerUpdate(Runnable callback) {
-        registerUpdate(null, null, callback);
-    }
-
-    @Override
-    public void registerUpdate(String menutext, String menushortcut, final Runnable callback) {
-        menutext = menutext == null || menutext.trim().isEmpty() ? "Check for Updates..." : menutext.trim();
-        menushortcut = menushortcut == null ? "" : menushortcut.trim();
-        if (libFound)
-            registerUpdate0(menutext, menushortcut, callback == null ? null : new Runnable() {
-                public void run() {
-                    SwingUtilities.invokeLater(callback);
-                }
-            });
-    }
-
-    @Override
-    public native String getThemeName();
-
-    private native void registerUpdate0(String menutext, String menushortcut, Runnable callback);
-
-    @Override
-    public void registerThemeChanged(final ThemeChangeListener callback) {
-        if (libFound)
-            registerThemeChanged0(new ThemeChangeListener() {
-                @Override
-                public void themeChanged(final String themeName) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            callback.themeChanged(themeName);
-                        }
-                    });
-                }
-            });
-    }
-
-    @Override
     public void toggleFullScreen(Window window) {
         try {
             if (window instanceof RootPaneContainer) {
@@ -216,18 +163,19 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
         device.setFullScreenWindow(device.getFullScreenWindow() == window ? null : window);
     }
 
-    private native void registerThemeChanged0(ThemeChangeListener callback);
-
     @Override
-    public void blendWindowTitle(boolean blended) {
-    }
-
-    @Override
-    public void setModernLookAndFeel() {
-    }
-
-    @Override
-    public void setDefaultLookAndFeel() {
+    public boolean isDarkTheme() {
+        try {
+            Process process = new ProcessBuilder("defaults", "read", "-g", "AppleInterfaceStyle")
+                    .redirectErrorStream(true)
+                    .start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line = reader.readLine();
+                return line != null && line.trim().equalsIgnoreCase("Dark");
+            }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -236,21 +184,41 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     }
 
     @Override
-    public void setApplicationIcons(String... iconNames) {
+    public void setApplicationImages(Image... images) {
         if (appInstance == null)
             return;
-        List<Image> appImages = new ArrayList<>();
-        for (String icon : iconNames)
-            appImages.add(EnhancerManager.getImage(icon));
-        if (!appImages.isEmpty())
+        if (images != null && images.length > 0)
             try {
-                appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, EnhancerManager.getImage(appImages, 1024));
+                appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, selectBestDockIcon(images));
             } catch (Exception ignored) {
             }
     }
 
-    @Override
-    public void setApplicationIcons(Image... icons) {
+    private static Image selectBestDockIcon(Image... images) {
+        List<Image> allVariants = new ArrayList<>();
+        for (Image img : images) {
+            if (img == null) continue;
+            // Try to detect and unpack MultiResolutionImage via reflection
+            Class<?> clazz = img.getClass();
+            if (clazz.getName().contains("MultiResolutionImage")) {
+                try {
+                    Method getVariants = clazz.getMethod("getResolutionVariants");
+                    @SuppressWarnings("unchecked")
+                    List<Image> variants = (List<Image>) getVariants.invoke(img);
+                    allVariants.addAll(variants);
+                    continue;
+                } catch (Exception ignored) {
+                    // fall back to using the base image
+                }
+            }
+            allVariants.add(img); // not a MultiResolutionImage
+        }
+
+        // Select largest area image
+        return allVariants.stream()
+                .filter(Objects::nonNull)
+                .max(Comparator.comparingInt(i -> i.getWidth(null) * i.getHeight(null)))
+                .orElse(null);
     }
 
     @Override
@@ -289,31 +257,6 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
         return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
     }
 
-    @Override
-    public Collection<File> showOpenDialog(final String title, final String buttonTitle, final File directory, final boolean openMulti, FileSelectionMode mode) {
-        final FileSelectionMode cmode = mode == null ? FilesOnly : mode;
-        return showDialogCommon(new OpenDialogLambda() {
-            @Override
-            public void exec(FileDialogCallback callback) {
-                showOpenDialog(title, buttonTitle, directory == null ? null : directory.getAbsolutePath(),
-                        cmode == FilesOnly || cmode == FilesAndDirectories,
-                        cmode == DirectoriesOnly || cmode == FilesAndDirectories,
-                        openMulti, callback);
-            }
-        });
-    }
-
-    @Override
-    public File showSaveDialog(final String title, final String buttonTitle, final File directory, final String file) {
-        List<File> files = showDialogCommon(new OpenDialogLambda() {
-            @Override
-            public void exec(FileDialogCallback callback) {
-                showSaveDialog(title, buttonTitle, directory == null ? null : directory.getAbsolutePath(), file, callback);
-            }
-        });
-        return files.isEmpty() ? null : files.get(0);
-    }
-
     private List<File> showDialogCommon(OpenDialogLambda exec) {
         final Thread thread = Thread.currentThread();
         final AtomicBoolean finish = new AtomicBoolean(false);
@@ -340,10 +283,6 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
         return result;
     }
 
-    private native void showOpenDialog(String title, String buttonTitle, String path, boolean canChooseFiles, boolean canChooseDirectories, boolean openMulti, FileDialogCallback callback);
-
-    private native void showSaveDialog(String title, String buttonTitle, String directory, String file, FileDialogCallback callback);
-
     @SuppressWarnings("unused")
     private interface FileDialogCallback {
         void fileSelected(String path);
@@ -352,4 +291,5 @@ class MacEnhancer implements Enhancer, FileChooserFactory {
     private interface OpenDialogLambda {
         void exec(FileDialogCallback callback);
     }
+
 }

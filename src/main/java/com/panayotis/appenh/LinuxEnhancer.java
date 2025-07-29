@@ -38,6 +38,7 @@ import static com.panayotis.appenh.EnhancerManager.getSelfExec;
 @SuppressWarnings({"ResultOfMethodCallIgnored", "UnusedReturnValue"})
 class LinuxEnhancer extends DefaultEnhancer {
     private int dpi = -1;
+    private Boolean darkTheme = null;
 
     private static boolean writeFile(String path, String content) {
         Writer out = null;
@@ -266,6 +267,12 @@ class LinuxEnhancer extends DefaultEnhancer {
 
     @Override
     public boolean isDarkTheme() {
+        if (darkTheme == null)
+            darkTheme = invalidateDarkTheme();
+        return darkTheme;
+    }
+
+    private boolean invalidateDarkTheme() {
         String de = detectDesktopEnvironment();
         switch (de) {
             case "GNOME":

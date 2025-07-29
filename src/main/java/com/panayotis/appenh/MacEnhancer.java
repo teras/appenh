@@ -38,6 +38,8 @@ class MacEnhancer implements Enhancer {
     private static final Object appInstance;
     private static final String packpref;
 
+    private Boolean darkTheme = null;
+
     static {
         Class<?> aCass = null;
         Object aInst = null;
@@ -165,6 +167,12 @@ class MacEnhancer implements Enhancer {
 
     @Override
     public boolean isDarkTheme() {
+        if (darkTheme == null)
+            darkTheme = investigateDarkTheme();
+        return darkTheme;
+    }
+
+    private boolean investigateDarkTheme() {
         try {
             Process process = new ProcessBuilder("defaults", "read", "-g", "AppleInterfaceStyle")
                     .redirectErrorStream(true)

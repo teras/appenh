@@ -10,4 +10,8 @@ public enum ThemeVariation {
         String name = name();
         return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
     }
+
+    public boolean isDark() {
+        return this == DARK || (this == AUTO && EnhancerManager.getDefault().isDarkTheme());
+    }
 }

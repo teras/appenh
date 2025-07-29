@@ -24,8 +24,16 @@ import java.io.InputStreamReader;
 
 @SuppressWarnings("UseSpecificCatch")
 class WindowsEnhancer extends DefaultEnhancer {
+    private Boolean darkTheme = null;
+
     @Override
     public boolean isDarkTheme() {
+        if (darkTheme == null)
+            darkTheme = investigateDarkTheme();
+        return darkTheme;
+    }
+
+    private boolean investigateDarkTheme() {
         try {
             Process process = new ProcessBuilder("reg", "query",
                     "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",

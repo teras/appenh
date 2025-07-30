@@ -261,6 +261,11 @@ class MacEnhancer implements Enhancer {
     }
 
     @Override
+    public void setProposedSystemScaling(float proposedScaling) {
+        // Do nothing, scaling is handled by the system
+    }
+
+    @Override
     public int getDPI() {
         return java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
     }

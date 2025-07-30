@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 class DefaultEnhancer implements Enhancer {
@@ -59,8 +60,7 @@ class DefaultEnhancer implements Enhancer {
 
     @Override
     public void setApplicationImages(Image... images) {
-        for (Image img : images)
-            frameImages.add(img);
+        Collections.addAll(frameImages, images);
     }
 
     @Override
@@ -84,7 +84,7 @@ class DefaultEnhancer implements Enhancer {
         for (File ifile : iconFiles)
             try {
                 ficons.add(ImageIO.read(ifile));
-            } catch (IOException ex) {
+            } catch (IOException ignored) {
             }
         frame.setIconImages(ficons);
     }
@@ -115,6 +115,16 @@ class DefaultEnhancer implements Enhancer {
     public void toggleFullScreen(Window window) {
         GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         device.setFullScreenWindow(device.getFullScreenWindow() == window ? null : window);
+    }
+
+    @Override
+    public void setProposedSystemScaling(float proposedScaling) {
+        if (proposedScaling < 0.1) {
+            proposedScaling = getDPI() / 96f;
+            if (proposedScaling < 1)
+                proposedScaling = 1; // Do not scale below 1)
+        }
+        System.setProperty("flatlaf.uiScale", Double.toString(proposedScaling));
     }
 
     @Override

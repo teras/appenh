@@ -92,6 +92,8 @@ public interface Enhancer {
 
     void unregisterApplication(String name);
 
+    void setProposedSystemScaling(float proposedScaling);
+
     int getDPI();
 
     /**

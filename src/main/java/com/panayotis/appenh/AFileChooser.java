@@ -1,89 +1,78 @@
 package com.panayotis.appenh;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 public class AFileChooser {
     private static InjectedVisuals injectedVisuals;
 
     private String title;
-    private String buttonTitle;
+    private String saveButton;
+    private String loadButton;
     private File directory = new File(System.getProperty("user.home"));
     private String file;
-    private boolean rememberSelection;
+    private boolean rememberPath = true;
+    private boolean forceExtension = false;
     private FileSelectionMode mode;
+    private final List<FileNameExtensionFilter> filters = new ArrayList<>();
 
     public AFileChooser() {
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public AFileChooser setTitle(String title) {
+    public AFileChooser title(String title) {
         this.title = title;
         return this;
     }
 
-    public String getButtonTitle() {
-        return buttonTitle;
-    }
-
-    public AFileChooser setButtonTitle(String buttonTitle) {
-        this.buttonTitle = buttonTitle;
+    public AFileChooser loadButtonTitle(String buttonTitle) {
+        this.loadButton = buttonTitle;
         return this;
     }
 
-    public File getDirectory() {
-        return directory;
-    }
-
-    public AFileChooser setDirectory(File directory) {
-        this.directory = directory;
+    public AFileChooser saveButtonTitle(String buttonTitle) {
+        this.saveButton = buttonTitle;
         return this;
     }
 
-    public String getFile() {
-        return file;
+    public AFileChooser directory(File directory) {
+        if (directory != null)
+            this.directory = directory;
+        return this;
     }
 
-    public AFileChooser setFile(String file) {
+    public AFileChooser file(String file) {
         this.file = file;
         return this;
     }
 
-    public FileSelectionMode getMode() {
-        return mode;
-    }
-
-    public AFileChooser setMode(FileSelectionMode mode) {
+    public AFileChooser mode(FileSelectionMode mode) {
         this.mode = mode;
         return this;
     }
 
-    public boolean shouldRememberSelection() {
-        return rememberSelection;
-    }
-
-    public AFileChooser setRememberSelection(boolean rememberSelection) {
-        this.rememberSelection = rememberSelection;
+    public AFileChooser rememberPath(boolean rememberSelection) {
+        this.rememberPath = rememberSelection;
         return this;
     }
 
-    public File openSingle() {
-        Collection<File> resultC = getFactory().showOpenDialog(title, buttonTitle, directory, false, mode);
+    public AFileChooser forceExtension(boolean forceExtension) {
+        this.forceExtension = forceExtension;
+        return this;
+    }
+
+    public File loadSingle() {
+        Collection<File> resultC = getFactory().showOpenDialog(title, loadButton, directory, false, mode, filters);
         File result = resultC == null || resultC.isEmpty() ? null : resultC.iterator().next();
-        if (result != null && rememberSelection && (result.isFile() || result.isDirectory()))
+        if (result != null && rememberPath && (result.isFile() || result.isDirectory()))
             directory = result.isFile() ? result.getParentFile() : result;
         return result;
     }
 
-    public Collection<File> openMulti() {
-        Collection<File> files = getFactory().showOpenDialog(title, buttonTitle, directory, true, mode);
-        if (files != null && !files.isEmpty() && rememberSelection) {
+    public Collection<File> loadMulti() {
+        Collection<File> files = getFactory().showOpenDialog(title, loadButton, directory, true, mode, filters);
+        if (files != null && !files.isEmpty() && rememberPath) {
             File fileC = files.iterator().next();
             directory = fileC.isFile() ? fileC.getParentFile() : fileC;
         }
@@ -91,9 +80,17 @@ public class AFileChooser {
     }
 
     public File save() {
-        File result = getFactory().showSaveDialog(title, buttonTitle, directory, this.file);
-        if (result != null && rememberSelection && (result.isFile() || result.isDirectory()))
-            directory = result.isFile() ? result.getParentFile() : result;
+        File result = getFactory().showSaveDialog(title, saveButton, directory, this.file, filters);
+        if (result != null) {
+            if (rememberPath)
+                directory = result.isDirectory() ? result : result.getParentFile();
+            if (forceExtension && !filters.isEmpty()) {
+                String extension = filters.get(0).getExtensions()[0];
+                if (!result.getName().toLowerCase().endsWith("." + extension))
+                    result = new File(result.getPath() + "." + extension);
+            }
+            this.file = result.getName();
+        }
         return result;
     }
 
@@ -108,13 +105,22 @@ public class AFileChooser {
             return defaultFactory;
     }
 
+    public AFileChooser filter(String extension, String description) {
+        if (extension != null && !extension.isEmpty()) {
+            if (description == null || description.isEmpty())
+                description = "Files with extension " + extension;
+            filters.add(new FileNameExtensionFilter(description, extension));
+        }
+        return this;
+    }
+
     public enum FileSelectionMode {
         FilesOnly, DirectoriesOnly, FilesAndDirectories
     }
 
     private static final FileChooserFactory defaultFactory = new FileChooserFactory() {
         @Override
-        public Collection<File> showOpenDialog(String title, String buttonTitle, File directory, boolean openMulti, FileSelectionMode mode) {
+        public Collection<File> showOpenDialog(String title, String buttonTitle, File directory, boolean openMulti, FileSelectionMode mode, List<FileNameExtensionFilter> filters) {
             JFileChooser fc = new JFileChooser(directory);
             if (mode == FileSelectionMode.FilesAndDirectories)
                 fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -122,11 +128,12 @@ public class AFileChooser {
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             else
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fc.setApproveButtonText(buttonTitle);
-            fc.setDialogTitle(title);
+            if (buttonTitle != null) fc.setApproveButtonText(buttonTitle);
+            if (title != null) fc.setDialogTitle(title);
             fc.setMultiSelectionEnabled(openMulti);
-            if (injectedVisuals != null)
-                injectedVisuals.willShow(fc);
+            filters.forEach(fc::addChoosableFileFilter);
+            if (!filters.isEmpty()) fc.setFileFilter(filters.get(0));
+            if (injectedVisuals != null) injectedVisuals.willShow(fc);
             fc.showOpenDialog(null);
             return fc.getSelectedFiles().length > 0
                     ? Arrays.asList(fc.getSelectedFiles())
@@ -135,11 +142,14 @@ public class AFileChooser {
         }
 
         @Override
-        public File showSaveDialog(String title, String buttonTitle, File directory, String file) {
+        public File showSaveDialog(String title, String buttonTitle, File directory, String file, List<FileNameExtensionFilter> filters) {
             JFileChooser fc = new JFileChooser(directory);
-            fc.setApproveButtonText(buttonTitle);
-            fc.setSelectedFile(new File(directory, file));
-            fc.setDialogTitle(title);
+            if (buttonTitle != null) fc.setApproveButtonText(buttonTitle);
+            if (file != null) fc.setSelectedFile(new File(directory, file));
+            if (title != null) fc.setDialogTitle(title);
+            filters.forEach(fc::addChoosableFileFilter);
+            if (!filters.isEmpty())
+                fc.setFileFilter(filters.get(0));
             if (injectedVisuals != null)
                 injectedVisuals.willShow(fc);
             fc.showOpenDialog(null);

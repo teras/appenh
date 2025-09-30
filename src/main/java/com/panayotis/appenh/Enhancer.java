@@ -47,7 +47,7 @@ public interface Enhancer {
     }
 
     default void blendWindowTitle(boolean blended) {
-        String value = blended ? "true" : "false";
+        String value = ((Boolean) blended).toString();
         System.setProperty("flatlaf.useWindowDecorations", value);
         System.setProperty("flatlaf.menuBarEmbedded", value);
     }

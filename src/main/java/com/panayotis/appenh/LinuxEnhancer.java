@@ -25,6 +25,7 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -32,13 +33,47 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
+import java.util.List;
 
 import static com.panayotis.appenh.EnhancerManager.getSelfExec;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored", "UnusedReturnValue"})
-class LinuxEnhancer extends DefaultEnhancer {
+class LinuxEnhancer extends DefaultEnhancer implements FileChooserFactory {
     private int dpi = -1;
     private Boolean darkTheme = null;
+
+    // The gate: prefer the xdg-desktop-portal dialog whenever it's reachable, otherwise plain Swing.
+    // Detection is cached once (it doesn't change during the app's life); the frontman that actually
+    // touches dbus-java is only referenced here, so those classes never load unless the portal is used.
+    private static Boolean portalOk;
+    private static FileChooserFactory portal;
+
+    private static synchronized FileChooserFactory fileFactory() {
+        if (portalOk == null) {
+            try {
+                if (PortalFileChooser.isAvailable()) {
+                    portal = new PortalFileChooser();
+                    portalOk = Boolean.TRUE;
+                } else
+                    portalOk = Boolean.FALSE;
+            } catch (Throwable t) {   // dbus-java absent / old JRE / no bus -> Swing
+                portalOk = Boolean.FALSE;
+            }
+        }
+        return portalOk ? portal : AFileChooser.swingFactory;
+    }
+
+    @Override
+    public Result showOpenDialog(Component parent, String title, String buttonTitle, File directory, boolean openMulti,
+                                 AFileChooser.FileSelectionMode mode, List<FileNameExtensionFilter> filters) {
+        return fileFactory().showOpenDialog(parent, title, buttonTitle, directory, openMulti, mode, filters);
+    }
+
+    @Override
+    public Result showSaveDialog(Component parent, String title, String buttonTitle, File directory, String file,
+                                 List<FileNameExtensionFilter> filters) {
+        return fileFactory().showSaveDialog(parent, title, buttonTitle, directory, file, filters);
+    }
 
     private static boolean writeFile(String path, String content) {
         Writer out = null;

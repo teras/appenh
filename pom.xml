@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.panayotis</groupId>
     <artifactId>appenh</artifactId>
-    <version>0.8.0</version>
+    <version>0.8.1</version>
     <name>Application Enhancer</name>
     <description>Cross-platform access of Java application properties, such as application icon, macOS about box, theme
         and quit listener
@@ -17,6 +17,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <flatlaf.version>3.6.1</flatlaf.version>
+        <dbus.version>5.1.0</dbus.version>
     </properties>
 
     <build>
@@ -56,6 +57,21 @@
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf-extras</artifactId>
             <version>${flatlaf.version}</version>
+        </dependency>
+        <!-- xdg-desktop-portal FileChooser backend (Linux). Optional: only used at runtime when the
+             portal is reachable and the JRE is 17+; consumers that want it bundle these themselves.
+             The native-unixsocket transport uses the JDK's own Unix domain sockets (no native lib). -->
+        <dependency>
+            <groupId>com.github.hypfvieh</groupId>
+            <artifactId>dbus-java-core</artifactId>
+            <version>${dbus.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.github.hypfvieh</groupId>
+            <artifactId>dbus-java-transport-native-unixsocket</artifactId>
+            <version>${dbus.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -98,6 +114,8 @@
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
+                            <autoPublish>false</autoPublish>
+                            <deploymentName>${project.artifactId}-${project.version}</deploymentName>
                         </configuration>
                     </plugin>
 
@@ -138,6 +156,12 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

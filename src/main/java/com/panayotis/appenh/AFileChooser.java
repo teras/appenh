@@ -2,6 +2,7 @@ package com.panayotis.appenh;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.Component;
 import java.io.File;
 import java.util.*;
 
@@ -15,8 +16,10 @@ public class AFileChooser {
     private String file;
     private boolean rememberPath = true;
     private boolean forceExtension = false;
+    private Component parent;
     private FileSelectionMode mode;
     private final List<FileNameExtensionFilter> filters = new ArrayList<>();
+    private FileNameExtensionFilter selectedFilter;
 
     public AFileChooser() {
     }
@@ -62,17 +65,26 @@ public class AFileChooser {
         return this;
     }
 
+    /** The window the dialog should be modal-for / centered on (may be any component within it; null for none). */
+    public AFileChooser parent(Component parent) {
+        this.parent = parent;
+        return this;
+    }
+
     public File loadSingle() {
-        Collection<File> resultC = getFactory().showOpenDialog(title, loadButton, directory, false, mode, filters);
-        File result = resultC == null || resultC.isEmpty() ? null : resultC.iterator().next();
+        FileChooserFactory.Result res = getFactory().showOpenDialog(parent, title, loadButton, directory, false, mode, filters);
+        selectedFilter = res.filter;
+        File result = res.files.isEmpty() ? null : res.files.iterator().next();
         if (result != null && rememberPath && (result.isFile() || result.isDirectory()))
             directory = result.isFile() ? result.getParentFile() : result;
         return result;
     }
 
     public Collection<File> loadMulti() {
-        Collection<File> files = getFactory().showOpenDialog(title, loadButton, directory, true, mode, filters);
-        if (files != null && !files.isEmpty() && rememberPath) {
+        FileChooserFactory.Result res = getFactory().showOpenDialog(parent, title, loadButton, directory, true, mode, filters);
+        selectedFilter = res.filter;
+        Collection<File> files = res.files;
+        if (!files.isEmpty() && rememberPath) {
             File fileC = files.iterator().next();
             directory = fileC.isFile() ? fileC.getParentFile() : fileC;
         }
@@ -80,7 +92,9 @@ public class AFileChooser {
     }
 
     public File save() {
-        File result = getFactory().showSaveDialog(title, saveButton, directory, this.file, filters);
+        FileChooserFactory.Result res = getFactory().showSaveDialog(parent, title, saveButton, directory, this.file, filters);
+        selectedFilter = res.filter;
+        File result = res.files.isEmpty() ? null : res.files.iterator().next();
         if (result != null) {
             if (rememberPath)
                 directory = result.isDirectory() ? result : result.getParentFile();
@@ -94,6 +108,15 @@ public class AFileChooser {
         return result;
     }
 
+    /** The extension filter the user had selected when confirming the last dialog, or null if none. */
+    public FileNameExtensionFilter selectedFilter() {
+        return selectedFilter;
+    }
+
+    static FileNameExtensionFilter asExtensionFilter(javax.swing.filechooser.FileFilter ff) {
+        return ff instanceof FileNameExtensionFilter ? (FileNameExtensionFilter) ff : null;
+    }
+
     public static void injectCustomVisuals(InjectedVisuals injectedVisuals) {
         AFileChooser.injectedVisuals = injectedVisuals;
     }
@@ -102,7 +125,7 @@ public class AFileChooser {
         if (EnhancerManager.getDefault() instanceof FileChooserFactory)
             return (FileChooserFactory) EnhancerManager.getDefault();
         else
-            return defaultFactory;
+            return swingFactory;
     }
 
     public AFileChooser filter(String extension, String description) {
@@ -114,13 +137,29 @@ public class AFileChooser {
         return this;
     }
 
+    /** Add one filter that matches several extensions at once (a leading dot in each is optional). */
+    public AFileChooser filter(String[] extensions, String description) {
+        if (extensions != null && extensions.length > 0) {
+            String[] clean = new String[extensions.length];
+            for (int i = 0; i < extensions.length; i++) {
+                String e = extensions[i] == null ? "" : extensions[i];
+                clean[i] = e.startsWith(".") ? e.substring(1) : e;
+            }
+            if (description == null || description.isEmpty())
+                description = "Files";
+            filters.add(new FileNameExtensionFilter(description, clean));
+        }
+        return this;
+    }
+
     public enum FileSelectionMode {
         FilesOnly, DirectoriesOnly, FilesAndDirectories
     }
 
-    private static final FileChooserFactory defaultFactory = new FileChooserFactory() {
+    /** The plain Swing implementation; also the fallback a platform {@code FileChooserFactory} delegates to. */
+    static final FileChooserFactory swingFactory = new FileChooserFactory() {
         @Override
-        public Collection<File> showOpenDialog(String title, String buttonTitle, File directory, boolean openMulti, FileSelectionMode mode, List<FileNameExtensionFilter> filters) {
+        public Result showOpenDialog(Component parent, String title, String buttonTitle, File directory, boolean openMulti, FileSelectionMode mode, List<FileNameExtensionFilter> filters) {
             JFileChooser fc = new JFileChooser(directory);
             if (mode == FileSelectionMode.FilesAndDirectories)
                 fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -134,15 +173,16 @@ public class AFileChooser {
             filters.forEach(fc::addChoosableFileFilter);
             if (!filters.isEmpty()) fc.setFileFilter(filters.get(0));
             if (injectedVisuals != null) injectedVisuals.willShow(fc);
-            fc.showOpenDialog(null);
-            return fc.getSelectedFiles().length > 0
+            fc.showOpenDialog(parent);
+            Collection<File> files = fc.getSelectedFiles().length > 0
                     ? Arrays.asList(fc.getSelectedFiles())
                     : (fc.getSelectedFile() == null
                     ? Collections.<File>emptyList() : Collections.singletonList(fc.getSelectedFile()));
+            return new Result(files, asExtensionFilter(fc.getFileFilter()));
         }
 
         @Override
-        public File showSaveDialog(String title, String buttonTitle, File directory, String file, List<FileNameExtensionFilter> filters) {
+        public Result showSaveDialog(Component parent, String title, String buttonTitle, File directory, String file, List<FileNameExtensionFilter> filters) {
             JFileChooser fc = new JFileChooser(directory);
             if (buttonTitle != null) fc.setApproveButtonText(buttonTitle);
             if (file != null) fc.setSelectedFile(new File(directory, file));
@@ -152,8 +192,10 @@ public class AFileChooser {
                 fc.setFileFilter(filters.get(0));
             if (injectedVisuals != null)
                 injectedVisuals.willShow(fc);
-            fc.showOpenDialog(null);
-            return fc.getSelectedFile();
+            fc.showOpenDialog(parent);
+            File sel = fc.getSelectedFile();
+            return new Result(sel == null ? Collections.<File>emptyList() : Collections.singletonList(sel),
+                    asExtensionFilter(fc.getFileFilter()));
         }
     };
 

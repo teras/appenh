@@ -266,32 +266,88 @@ class LinuxEnhancer extends DefaultEnhancer implements FileChooserFactory {
     public int getDPI() {
         if (dpi > 0)
             return dpi;
+        dpi = dpiFromHelper();        // bundled per-arch helper: reads Xft.dpi via libX11 (works without xrdb, e.g. Flatpak)
+        if (dpi <= 0)
+            dpi = dpiFromXrdb();      // desktop fallback: parse `xrdb -query`
+        if (dpi <= 0)
+            dpi = super.getDPI();
+        return dpi;
+    }
+
+    /** Extract and run the bundled per-arch xftdpi helper, which prints the X Xft.dpi resource. */
+    private static int dpiFromHelper() {
+        String res = helperResourceName();
+        if (res == null)
+            return -1;
+        File tmp = null;
+        try (InputStream in = LinuxEnhancer.class.getClassLoader().getResourceAsStream(res)) {
+            if (in == null)
+                return -1;
+            tmp = File.createTempFile("xftdpi-", "");
+            tmp.deleteOnExit();
+            try (OutputStream out = new FileOutputStream(tmp)) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0)
+                    out.write(buf, 0, n);
+            }
+            tmp.setExecutable(true);
+            Process proc = new ProcessBuilder(tmp.getAbsolutePath())
+                    .redirectError(ProcessBuilder.Redirect.to(new File("/dev/null")))  // Xlib may log to stderr on failure; drain it
+                    .start();
+            String line;
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"))) {
+                line = r.readLine();
+            }
+            proc.waitFor();
+            return parseDpi(line);
+        } catch (Exception ignored) {
+            return -1;
+        } finally {
+            if (tmp != null)
+                tmp.delete();
+        }
+    }
+
+    /** Resource path of the xftdpi helper for the current CPU architecture, or null if unsupported. */
+    private static String helperResourceName() {
+        String arch = System.getProperty("os.arch", "").toLowerCase();
+        if (arch.equals("amd64") || arch.equals("x86_64"))
+            return "com/panayotis/appenh/xftdpi-linux-x86_64";
+        if (arch.equals("aarch64") || arch.equals("arm64"))
+            return "com/panayotis/appenh/xftdpi-linux-aarch64";
+        return null;
+    }
+
+    /** Parse `xrdb -query` for the Xft.dpi line. */
+    private static int dpiFromXrdb() {
         try {
-            Process proc = Runtime.getRuntime().exec(new String[]{"xrdb", "-q"});
-            BufferedReader reader = null;
-            try {
-                reader = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"));
+            Process proc = new ProcessBuilder("xrdb", "-q")
+                    .redirectError(ProcessBuilder.Redirect.to(new File("/dev/null")))  // xrdb logs "Connection refused" to stderr when no display
+                    .start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     line = line.toLowerCase();
-                    if (line.startsWith("xft.dpi")) {
-                        dpi = Integer.parseInt(line.substring(line.indexOf(':') + 1).trim());
-                        break;
-                    }
+                    if (line.startsWith("xft.dpi"))
+                        return parseDpi(line.substring(line.indexOf(':') + 1));
                 }
-            } catch (Exception ignored) {
-            } finally {
-                if (reader != null)
-                    try {
-                        reader.close();
-                    } catch (Exception ignored) {
-                    }
             }
-        } catch (IOException ignored) {
+        } catch (Exception ignored) {
         }
-        if (dpi < 0)
-            dpi = super.getDPI();
-        return dpi;
+        return -1;
+    }
+
+    /** Parse a DPI value that may be an int or a float ("163" or "163.0"); -1 if unparseable/non-positive. */
+    private static int parseDpi(String s) {
+        if (s == null)
+            return -1;
+        try {
+            int d = Math.round(Float.parseFloat(s.trim()));
+            return d > 0 ? d : -1;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     @Override

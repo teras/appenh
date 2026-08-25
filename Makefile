@@ -25,6 +25,19 @@ OBJECTS=$(SOURCES:$(SOURCES_DIR)/%.cpp=$(OBJECTS_DIR)/%.o)
 
 all: ${INST_LIBRARY}
 
+# Linux DPI helper: tiny dlopen(libX11)-based binary, bundled per-arch as a resource and run by
+# LinuxEnhancer.getDPI() when xrdb is unavailable (e.g. inside a Flatpak sandbox). No X11 headers or
+# link are needed, so it cross-compiles with plain gcc. Run on a Linux host with the aarch64 cross gcc.
+XFTDPI_SRC=src/main/c/xftdpi.c
+XFTDPI_DIR=src/main/resources/com/panayotis/appenh
+
+xftdpi:
+	mkdir -p ${XFTDPI_DIR}
+	gcc -O2 -o ${XFTDPI_DIR}/xftdpi-linux-x86_64 ${XFTDPI_SRC} -ldl
+	aarch64-linux-gnu-gcc -O2 -o ${XFTDPI_DIR}/xftdpi-linux-aarch64 ${XFTDPI_SRC} -ldl
+	strip ${XFTDPI_DIR}/xftdpi-linux-x86_64
+	aarch64-linux-gnu-strip ${XFTDPI_DIR}/xftdpi-linux-aarch64
+
 javah:
 	javah -o ${SOURCES_DIR}/${CLASS}.h -cp ${CLASS_DIR} ${CLASS}
 

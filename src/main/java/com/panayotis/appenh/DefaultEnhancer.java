@@ -119,11 +119,10 @@ class DefaultEnhancer implements Enhancer {
 
     @Override
     public void setProposedSystemScaling(float proposedScaling) {
-        if (proposedScaling < 0.1) {
-            proposedScaling = getDPI() / 96f;
-            if (proposedScaling < 1)
-                proposedScaling = 1; // Do not scale below 1)
-        }
+        if (proposedScaling < 0.1)
+            proposedScaling = getRecommendedScaling();
+        else if (proposedScaling < 1)
+            proposedScaling = 1; // Do not scale below 1
         System.setProperty("flatlaf.uiScale", Double.toString(proposedScaling));
     }
 

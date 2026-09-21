@@ -97,6 +97,49 @@ public interface Enhancer {
     int getDPI();
 
     /**
+     * The scaling the system already applies to the user interface, before the look and feel
+     * scales anything on its own. On Java 9 and later this is the HiDPI scaling of Java2D, which
+     * is driven by the desktop scaling on Windows and macOS, and by GDK_SCALE on Linux. On Java 8
+     * nothing is scaled at this level, so this is always 1.
+     *
+     * @return the scaling already applied by the system, never less than 1
+     */
+    default float getSystemScaling() {
+        try {
+            if (GraphicsEnvironment.isHeadless())
+                return 1;
+            double scale = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                    .getDefaultScreenDevice().getDefaultConfiguration()
+                    .getDefaultTransform().getScaleX();
+            return scale > 1 ? (float) scale : 1;
+        } catch (Throwable t) {
+            return 1;
+        }
+    }
+
+    /**
+     * How much the look and feel should scale the user interface, on top of what the system
+     * already does. This is what the screen density asks for, divided by the scaling the system
+     * already applies, so the two never multiply with each other.
+     * <p>
+     * On Java 9 and later under Windows or macOS the system already scales by the full amount, so
+     * this is 1. On Linux, where Java2D does not scale by itself, this follows the screen density,
+     * and on Java 8 it does so on every platform.
+     *
+     * @return the scaling to ask the look and feel for, never less than 1
+     */
+    default float getRecommendedScaling() {
+        // Once the system scales at all, it scales by the full amount the desktop asks for, so
+        // there is nothing left to add. Dividing the density by the system scaling instead would
+        // compare two independent measurements of the same thing, and any disagreement between
+        // them would leak through as a remainder and enlarge an already correct interface.
+        if (getSystemScaling() > 1)
+            return 1;
+        float scaling = getDPI() / 96f;
+        return scaling > 1 ? scaling : 1;
+    }
+
+    /**
      * @param frame     The frame to work on
      * @param iconNames Could be empty; the set application icons will be used
      */
